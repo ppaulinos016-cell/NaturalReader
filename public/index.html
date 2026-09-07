@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaturalReader</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Natural<span>Reader</span></div>
+    <div class="status">Lecteur vocal naturel</div>
+</header>
+
+<main class="reader-container">
+
+    <section class="hero">
+        <h1>Natural Reader</h1>
+        <p>Écrivez ou collez votre texte et faites-le lire naturellement.</p>
+    </section>
+
+    <section class="reader-card">
+
+        <div class="toolbar">
+            <div class="control-group">
+                <label for="language">Langue</label>
+                <select id="language">
+                    <option value="fr-FR">Français</option>
+                    <option value="en-GB">English</option>
+                    <option value="de-DE">Deutsch</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="voice">Voix</label>
+                <select id="voice">
+                    <option value="">Chargement des voix...</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="speed">Vitesse</label>
+                <select id="speed">
+                    <option value="0.5">Très lent</option>
+                    <option value="0.75">Lent</option>
+                    <option value="1">Normal</option>
+                    <option value="1.25">Rapide</option>
+                    <option value="1.5">Très rapide</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="text-area-wrapper">
+            <textarea
+                id="text"
+                placeholder="Écrivez ou collez votre texte ici..."
+                maxlength="10000"
+            ></textarea>
+
+            <div class="text-info">
+                <span id="characterCount">0 caractère</span>
+                <span id="wordCount">0 mot</span>
+            </div>
+        </div>
+
+        <div class="text-actions">
+            <button id="cleanButton" class="text-button">
+                ✨ Nettoyer
+            </button>
+
+            <button id="detectButton" class="text-button">
+                🌍 Détecter la langue
+            </button>
+
+            <button id="clearButton" class="text-button danger">
+                🗑 Effacer
+            </button>
+        </div>
+
+        <div class="reading-status" id="readingStatus">
+            Prêt à lire
+        </div>
+
+        <div class="controls">
+            <button id="readButton" class="primary-button">
+                ▶ Lire
+            </button>
+
+            <button id="pauseButton" class="secondary-button">
+                ⏸ Pause
+            </button>
+
+            <button id="stopButton" class="secondary-button">
+                ⏹ Arrêter
+            </button>
+        </div>
+
+    </section>
+
+    <section class="features">
+
+        <div class="feature">
+            <div class="feature-icon">🗣️</div>
+            <h2>Voix naturelles</h2>
+            <p>Des voix expressives seront intégrées dans les prochaines étapes.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">🎚️</div>
+            <h2>Contrôle du rythme</h2>
+            <p>Choisissez une lecture très lente, lente, normale ou rapide.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">✨</div>
+            <h2>Lecture expressive</h2>
+            <p>L'intonation, les pauses et les émotions seront ajoutées progressivement.</p>
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+    NaturalReader — Lecteur de texte vocal
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
+
+
