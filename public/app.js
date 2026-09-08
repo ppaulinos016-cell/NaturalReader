@@ -147,26 +147,51 @@ function detectLanguage() {
 function loadVoices() {
     voices = speechSynthesis.getVoices();
 
-    const language = languageSelect.value.substring(0, 2);
+    const selectedLanguage = languageSelect.value;
 
-    const matchingVoices = voices.filter(voice =>
-        voice.lang.toLowerCase().startsWith(language.toLowerCase())
-    );
+    const allowedVoices = {
+        "fr-FR": [
+            "Microsoft Denise Online (Natural)",
+            "Microsoft Eloise Online (Natural)",
+            "Microsoft Jean Online (Natural)"
+        ],
+        "en-GB": [
+            "Microsoft Maisie Online (Natural)",
+            "Microsoft Ezinne Online (Natural)"
+        ],
+        "de-DE": [
+            "Microsoft Seraphina Mehrsprachig Online (Natural)",
+            "Microsoft Conrad Online (Natural)"
+        ]
+    };
+
+    const allowedNames = allowedVoices[selectedLanguage] || [];
+
+    const matchingVoices = voices.filter(voice => {
+        const name = voice.name.toLowerCase();
+
+        return allowedNames.some(allowedName =>
+            name.includes(allowedName.toLowerCase())
+        );
+    });
 
     voiceSelect.innerHTML = "";
 
     if (!matchingVoices.length) {
         const option = document.createElement("option");
         option.value = "";
-        option.textContent = "Aucune voix disponible";
+        option.textContent = "Aucune voix Windows disponible";
         voiceSelect.appendChild(option);
         return;
     }
 
     matchingVoices.forEach(voice => {
         const option = document.createElement("option");
+
         option.value = voices.indexOf(voice);
+
         option.textContent = voice.name;
+
         voiceSelect.appendChild(option);
     });
 }
@@ -259,4 +284,5 @@ speechSynthesis.onvoiceschanged = loadVoices;
 
 updateCounters();
 loadVoices();
+
 
