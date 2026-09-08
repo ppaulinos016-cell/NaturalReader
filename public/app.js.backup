@@ -2,7 +2,6 @@
 const languageSelect = document.getElementById("language");
 const voiceSelect = document.getElementById("voice");
 const speedSelect = document.getElementById("speed");
-const downloadButton = document.getElementById("downloadButton");
 
 const readButton = document.getElementById("readButton");
 const pauseButton = document.getElementById("pauseButton");
@@ -285,104 +284,5 @@ speechSynthesis.onvoiceschanged = loadVoices;
 
 updateCounters();
 loadVoices();
-
-
-
-
-function updateDownloadButton() {
-    const hasText = getText().trim().length > 0;
-
-    const index = Number(voiceSelect.value);
-    const hasVoice =
-        !Number.isNaN(index) &&
-        !!voices[index];
-
-    downloadButton.disabled = !(hasText && hasVoice);
-}
-
-downloadButton.addEventListener("click", async () => {
-    const text = getText().trim();
-
-    if (!text) {
-        readingStatus.textContent = "⚠️ Aucun texte à télécharger";
-        return;
-    }
-
-    const index = Number(voiceSelect.value);
-
-    if (Number.isNaN(index) || !voices[index]) {
-        readingStatus.textContent = "⚠️ Sélectionnez une voix.";
-        return;
-    }
-
-    const selectedVoice = voices[index].name;
-    const speed = Number(speedSelect.value);
-
-    downloadButton.disabled = true;
-    readingStatus.textContent = "⏳ Génération de l'audio en cours...";
-
-    try {
-        const response = await fetch("/api/tts-microsoft", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                text,
-                voiceName: selectedVoice,
-                speed
-            })
-        });
-
-        if (!response.ok) {
-            let message = "Erreur lors de la génération audio.";
-
-            try {
-                const data = await response.json();
-
-                if (data.error) {
-                    message = data.error;
-                }
-            } catch {
-                // Réponse non JSON
-            }
-
-            throw new Error(message);
-        }
-
-        console.log("NaturalReader TTS HTTP:", response.status, response.headers.get("content-type"), response.headers.get("content-length")); const blob = await response.blob(); console.log("NaturalReader TTS Blob:", blob.type, blob.size);
-
-        if (!blob.size) {
-            throw new Error("Le fichier audio généré est vide.");
-        }
-
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "NaturalReader-audio.mp3";
-
-        document.body.appendChild(link);
-        link.click();
-
-        setTimeout(() => {
-            link.remove();
-            URL.revokeObjectURL(url);
-        }, 5000);
-
-        readingStatus.textContent =
-            "✅ Fichier audio généré et téléchargement lancé.";
-    } catch (error) {
-        console.error("Erreur téléchargement audio :", error);
-
-        readingStatus.textContent =
-            `❌ ${error.message}`;
-    } finally {
-        updateDownloadButton();
-    }
-});
-
-
-
 
 

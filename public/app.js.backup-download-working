@@ -361,17 +361,27 @@ downloadButton.addEventListener("click", async () => {
         const link = document.createElement("a");
         link.href = url;
         link.download = "NaturalReader-audio.mp3";
+        link.target = "_blank";
+        link.rel = "noopener";
 
+        link.style.display = "none";
         document.body.appendChild(link);
-        link.click();
+
+        link.dispatchEvent(
+            new MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            })
+        );
 
         setTimeout(() => {
             link.remove();
             URL.revokeObjectURL(url);
-        }, 5000);
+        }, 3000);
 
         readingStatus.textContent =
-            "✅ Fichier audio généré et téléchargement lancé.";
+            "✅ Fichier audio généré. Vérifiez le dossier Téléchargements.";
     } catch (error) {
         console.error("Erreur téléchargement audio :", error);
 
@@ -381,7 +391,6 @@ downloadButton.addEventListener("click", async () => {
         updateDownloadButton();
     }
 });
-
 
 
 

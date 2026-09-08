@@ -94,10 +94,6 @@
             <button id="stopButton" class="secondary-button">
                 ⏹ Arrêter
             </button>
-
-            <button id="downloadButton" class="secondary-button" disabled>
-                ⬇ Télécharger l'audio
-            </button>
         </div>
 
     </section>
@@ -133,6 +129,5 @@
 <script src="app.js"></script>
 </body>
 </html>
-
 
 
