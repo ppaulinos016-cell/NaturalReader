@@ -17,7 +17,9 @@ const characterCount = document.getElementById("characterCount");
 const wordCount = document.getElementById("wordCount");
 
 let voices = [];
-let currentUtterance = null;
+let currentAudio = null;
+let currentAudioUrl = null;
+let audioReadyForDownload = false;
 
 function getText() {
     return textInput.value.replace(/\r\n/g, "\n");
@@ -59,7 +61,7 @@ function cleanText() {
 }
 
 function clearText() {
-    speechSynthesis.cancel();
+    stopReading();
     textInput.value = "";
     updateCounters();
     readingStatus.textContent = "Prêt à lire";
@@ -146,10 +148,6 @@ function detectLanguage() {
 }
 
 function loadVoices() {
-    voices = speechSynthesis.getVoices();
-
-    const selectedLanguage = languageSelect.value;
-
     const allowedVoices = {
         "fr-FR": [
             "Microsoft Denise Online (Natural)",
@@ -166,145 +164,27 @@ function loadVoices() {
         ]
     };
 
-    const allowedNames = allowedVoices[selectedLanguage] || [];
+    const selectedLanguage = languageSelect.value;
+    const names = allowedVoices[selectedLanguage] || [];
 
-    const matchingVoices = voices.filter(voice => {
-        const name = voice.name.toLowerCase();
-
-        return allowedNames.some(allowedName =>
-            name.includes(allowedName.toLowerCase())
-        );
-    });
+    voices = names.map(name => ({ name }));
 
     voiceSelect.innerHTML = "";
 
-    if (!matchingVoices.length) {
+    voices.forEach((voice, index) => {
         const option = document.createElement("option");
-        option.value = "";
-        option.textContent = "Aucune voix Windows disponible";
-        voiceSelect.appendChild(option);
-        return;
-    }
-
-    matchingVoices.forEach(voice => {
-        const option = document.createElement("option");
-
-        option.value = voices.indexOf(voice);
-
+        option.value = index;
         option.textContent = voice.name;
-
         voiceSelect.appendChild(option);
     });
-}
 
-function speak() {
+    updateDownloadButton();
+}
+async function speak() {
     const text = getText().trim();
 
     if (!text) {
-        readingStatus.textContent =
-            "Veuillez saisir un texte à lire.";
-        textInput.focus();
-        return;
-    }
-
-    speechSynthesis.cancel();
-
-    currentUtterance =
-        new SpeechSynthesisUtterance(text);
-
-    currentUtterance.lang =
-        languageSelect.value;
-
-    currentUtterance.rate =
-        Number(speedSelect.value);
-
-    currentUtterance.pitch = 1;
-
-    const index = Number(voiceSelect.value);
-
-    if (!Number.isNaN(index) && voices[index]) {
-        currentUtterance.voice = voices[index];
-    }
-
-    currentUtterance.onstart = () => {
-        readingStatus.textContent =
-            `🔊 Lecture en cours — durée estimée : ${formatDuration(estimateReadingTime())}`;
-    };
-
-    currentUtterance.onend = () => {
-        readingStatus.textContent =
-            "✅ Lecture terminée";
-    };
-
-    currentUtterance.onerror = () => {
-        readingStatus.textContent =
-            "❌ Erreur pendant la lecture.";
-    };
-
-    speechSynthesis.speak(currentUtterance);
-}
-
-function pauseReading() {
-    if (speechSynthesis.speaking && !speechSynthesis.paused) {
-        speechSynthesis.pause();
-        readingStatus.textContent = "⏸ Lecture en pause";
-    }
-}
-
-function stopReading() {
-    speechSynthesis.cancel();
-    readingStatus.textContent = "⏹ Lecture arrêtée";
-}
-
-textInput.addEventListener("input", updateCounters);
-
-languageSelect.addEventListener("change", () => {
-    loadVoices();
-    readingStatus.textContent =
-        "Langue sélectionnée. Texte prêt à être lu.";
-});
-
-speedSelect.addEventListener("change", () => {
-    const duration = estimateReadingTime();
-
-    if (duration) {
-        readingStatus.textContent =
-            `🎚️ Durée estimée : ${formatDuration(duration)}`;
-    }
-});
-
-readButton.addEventListener("click", speak);
-pauseButton.addEventListener("click", pauseReading);
-stopButton.addEventListener("click", stopReading);
-
-cleanButton.addEventListener("click", cleanText);
-detectButton.addEventListener("click", detectLanguage);
-clearButton.addEventListener("click", clearText);
-
-speechSynthesis.onvoiceschanged = loadVoices;
-
-updateCounters();
-loadVoices();
-
-
-
-
-function updateDownloadButton() {
-    const hasText = getText().trim().length > 0;
-
-    const index = Number(voiceSelect.value);
-    const hasVoice =
-        !Number.isNaN(index) &&
-        !!voices[index];
-
-    downloadButton.disabled = !(hasText && hasVoice);
-}
-
-downloadButton.addEventListener("click", async () => {
-    const text = getText().trim();
-
-    if (!text) {
-        readingStatus.textContent = "⚠️ Aucun texte à télécharger";
+        readingStatus.textContent = "⚠️ Aucun texte à lire";
         return;
     }
 
@@ -318,8 +198,23 @@ downloadButton.addEventListener("click", async () => {
     const selectedVoice = voices[index].name;
     const speed = Number(speedSelect.value);
 
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+
+    if (currentAudioUrl) {
+        URL.revokeObjectURL(currentAudioUrl);
+        currentAudioUrl = null;
+    }
+
+    currentAudio = null;
+    audioReadyForDownload = false;
     downloadButton.disabled = true;
-    readingStatus.textContent = "⏳ Génération de l'audio en cours...";
+
+    readButton.disabled = true;
+    readingStatus.textContent =
+        `⏳ Génération avec ${selectedVoice}...`;
 
     try {
         const response = await fetch("/api/tts-microsoft", {
@@ -350,39 +245,131 @@ downloadButton.addEventListener("click", async () => {
             throw new Error(message);
         }
 
-        console.log("NaturalReader TTS HTTP:", response.status, response.headers.get("content-type"), response.headers.get("content-length")); const blob = await response.blob(); console.log("NaturalReader TTS Blob:", blob.type, blob.size);
+        const blob = await response.blob();
 
         if (!blob.size) {
             throw new Error("Le fichier audio généré est vide.");
         }
 
-        const url = URL.createObjectURL(blob);
+        currentAudioUrl = URL.createObjectURL(blob);
+        currentAudio = new Audio(currentAudioUrl);
 
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "NaturalReader-audio.mp3";
+        currentAudio.onplay = () => {
+            readingStatus.textContent =
+                `🔊 Lecture en cours — ${selectedVoice}`;
+        };
 
-        document.body.appendChild(link);
-        link.click();
+        currentAudio.onended = () => {
+            audioReadyForDownload = true;
+            downloadButton.disabled = false;
+            readButton.disabled = false;
 
-        setTimeout(() => {
-            link.remove();
-            URL.revokeObjectURL(url);
-        }, 5000);
+            readingStatus.textContent =
+                "✅ Lecture terminée. L'audio est maintenant disponible au téléchargement.";
+        };
 
-        readingStatus.textContent =
-            "✅ Fichier audio généré et téléchargement lancé.";
+        currentAudio.onerror = () => {
+            audioReadyForDownload = false;
+            downloadButton.disabled = true;
+            readButton.disabled = false;
+
+            readingStatus.textContent =
+                "❌ Erreur pendant la lecture audio.";
+        };
+
+        await currentAudio.play();
+
     } catch (error) {
-        console.error("Erreur téléchargement audio :", error);
+        console.error("Erreur NaturalReader :", error);
+
+        readButton.disabled = false;
+        downloadButton.disabled = true;
+        audioReadyForDownload = false;
 
         readingStatus.textContent =
             `❌ ${error.message}`;
-    } finally {
-        updateDownloadButton();
+    }
+}
+function pauseReading() {
+    if (!currentAudio) {
+        return;
+    }
+
+    if (!currentAudio.paused) {
+        currentAudio.pause();
+        readingStatus.textContent = "⏸ Lecture en pause";
+    } else {
+        currentAudio.play();
+        readingStatus.textContent = "▶️ Lecture reprise";
+    }
+}
+function stopReading() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+
+    audioReadyForDownload = false;
+    downloadButton.disabled = true;
+    readButton.disabled = false;
+
+    readingStatus.textContent = "⏹ Lecture arrêtée";
+}
+textInput.addEventListener("input", updateCounters);
+
+languageSelect.addEventListener("change", () => {
+    loadVoices();
+    readingStatus.textContent =
+        "Langue sélectionnée. Texte prêt à être lu.";
+});
+
+speedSelect.addEventListener("change", () => {
+    const duration = estimateReadingTime();
+
+    if (duration) {
+        readingStatus.textContent =
+            `🎚️ Durée estimée : ${formatDuration(duration)}`;
     }
 });
 
+readButton.addEventListener("click", speak);
+pauseButton.addEventListener("click", pauseReading);
+stopButton.addEventListener("click", stopReading);
+
+cleanButton.addEventListener("click", cleanText);
+detectButton.addEventListener("click", detectLanguage);
+clearButton.addEventListener("click", clearText);
+
+
+updateCounters();
+loadVoices();
 
 
 
 
+function updateDownloadButton() {
+    downloadButton.disabled = !audioReadyForDownload;
+}
+
+downloadButton.addEventListener("click", () => {
+    if (!audioReadyForDownload || !currentAudioUrl) {
+        readingStatus.textContent =
+            "⚠️ Le téléchargement sera disponible après la fin de la lecture.";
+        return;
+    }
+
+    const link = document.createElement("a");
+
+    link.href = currentAudioUrl;
+    link.download = "NaturalReader-audio.mp3";
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    readingStatus.textContent =
+        "✅ Téléchargement de l'audio lancé.";
+});
+
+updateDownloadButton();
