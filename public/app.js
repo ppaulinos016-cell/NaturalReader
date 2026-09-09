@@ -2,6 +2,7 @@
 const languageSelect = document.getElementById("language");
 const voiceSelect = document.getElementById("voice");
 const speedSelect = document.getElementById("speed");
+const readingMode = document.getElementById("readingMode");
 const downloadButton = document.getElementById("downloadButton");
 
 const readButton = document.getElementById("readButton");
@@ -197,6 +198,7 @@ async function speak() {
 
     const selectedVoice = voices[index].name;
     const speed = Number(speedSelect.value);
+    const mode = readingMode ? readingMode.value : "normal";
 
     if (currentAudio) {
         currentAudio.pause();
@@ -211,13 +213,25 @@ async function speak() {
     currentAudio = null;
     audioReadyForDownload = false;
     downloadButton.disabled = true;
-
     readButton.disabled = true;
+
+    const modeLabel =
+        readingMode
+            ? readingMode.options[readingMode.selectedIndex].text
+            : "Normal";
+
     readingStatus.textContent =
-        `⏳ Génération avec ${selectedVoice}...`;
+        mode === "normal"
+            ? `⏳ Génération avec ${selectedVoice}...`
+            : `🧠 Analyse intelligente — mode ${modeLabel}...`;
 
     try {
-        const response = await fetch("/api/tts-microsoft", {
+        const endpoint =
+            mode === "normal"
+                ? "/api/tts-microsoft"
+                : "/api/tts-expressive";
+
+        const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -225,7 +239,9 @@ async function speak() {
             body: JSON.stringify({
                 text,
                 voiceName: selectedVoice,
-                speed
+                speed,
+                mode,
+                language: languageSelect.value
             })
         });
 
@@ -239,7 +255,7 @@ async function speak() {
                     message = data.error;
                 }
             } catch {
-                // Réponse non JSON
+                // Réponse non JSON.
             }
 
             throw new Error(message);
@@ -256,7 +272,9 @@ async function speak() {
 
         currentAudio.onplay = () => {
             readingStatus.textContent =
-                `🔊 Lecture en cours — ${selectedVoice}`;
+                mode === "normal"
+                    ? `🔊 Lecture en cours — ${selectedVoice}`
+                    : `🔊 Lecture ${modeLabel} — ${selectedVoice}`;
         };
 
         currentAudio.onended = () => {
@@ -321,6 +339,16 @@ languageSelect.addEventListener("change", () => {
     loadVoices();
     readingStatus.textContent =
         "Langue sélectionnée. Texte prêt à être lu.";
+});
+
+readingMode.addEventListener("change", () => {
+    const modeLabel =
+        readingMode.options[readingMode.selectedIndex].text;
+
+    readingStatus.textContent =
+        readingMode.value === "normal"
+            ? "Mode Normal : lecture standard."
+            : `Mode ${modeLabel} : analyse intelligente activée.`;
 });
 
 speedSelect.addEventListener("change", () => {

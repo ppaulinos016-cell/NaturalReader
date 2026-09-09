@@ -6,6 +6,7 @@ const fs = require("fs/promises");
 const os = require("os");
 const crypto = require("crypto");
 const { EdgeTTS } = require("node-edge-tts");
+const { registerExpressiveTTS } = require("./expressive-engine");
 
 const app = express();
 const PORT = 3000;
@@ -240,6 +241,8 @@ app.post("/api/tts-microsoft", async (req, res) => {
         }
     }
 });
+
+registerExpressiveTTS(app, { findMicrosoftVoice, convertSpeedToRate });
 
 app.listen(PORT, () => {
     console.log(`NaturalReader lancé sur le port ${PORT}`);
