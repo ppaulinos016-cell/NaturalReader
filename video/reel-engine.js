@@ -9,10 +9,10 @@ const { EdgeTTS } = require("node-edge-tts");
 const ffmpegPath = require("ffmpeg-static");
 
 const { analyzeText } =
-    require("C:\\Users\\hp\\NaturalReader\\video\\scene-analyzer");
+    require("./scene-analyzer");
 
 const { findAndDownloadImage } =
-    require("C:\\Users\\hp\\NaturalReader\\video\\image-search");
+    require("./image-search");
 
 const execFileAsync = promisify(execFile);
 
@@ -613,7 +613,7 @@ async function buildReel({
         );
 
     const outputDir =
-        "C:\\Users\\hp\\NaturalReader\\video\\output";
+        path.join(__dirname, "output");
 
     await fs.mkdir(
         tempRoot,
@@ -849,4 +849,5 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
 

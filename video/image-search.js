@@ -4,10 +4,10 @@ const path = require("path");
 const https = require("https");
 
 const OUTPUT_DIR =
-    "C:\\Users\\hp\\NaturalReader\\video\\images";
+    path.join(__dirname, "images");
 
 const CACHE_DIR =
-    "C:\\Users\\hp\\NaturalReader\\video\\cache";
+    path.join(__dirname, "cache");
 
 const USER_AGENT =
     "NaturalReader/1.0 local video engine";
@@ -901,3 +901,4 @@ module.exports = {
     findAndDownloadImage,
     rankCandidates
 };
+
