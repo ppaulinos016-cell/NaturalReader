@@ -278,6 +278,8 @@ function wrapSubtitle(
         .join("\n");
 }
 
+const DRAW_TEXT_FONT = process.platform === "win32" ? "C:/Windows/Fonts/arial.ttf" : "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+
 function escapeDrawtextText(
     value
 ) {
@@ -421,10 +423,10 @@ async function renderTitleCard(
 
     const filter =
         "drawbox=x=0:y=0:w=iw:h=ih:color=#07111f@1:t=fill" +
-        `,drawtext=fontfile='C:/Windows/Fonts/arial.ttf':text='${titleText}'` +
+        `,drawtext=fontfile='':text='${titleText}'` +
         ":fontcolor=white:fontsize=86:borderw=3:bordercolor=black" +
         ":x=(w-text_w)/2:y=(h-text_h)*0.40" +
-        `,drawtext=fontfile='C:/Windows/Fonts/arial.ttf':text='${subtitleText}'` +
+        `,drawtext=fontfile='':text='${subtitleText}'` +
         ":fontcolor=white:fontsize=44:borderw=2:bordercolor=black" +
         ":x=(w-text_w)/2:y=(h-text_h)*0.56" +
         ",fade=t=in:st=0:d=0.35" +
@@ -849,5 +851,7 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
+
 
 
