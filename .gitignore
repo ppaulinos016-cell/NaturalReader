@@ -2,3 +2,20 @@
 .env
 .env.*
 !.env.example
+video/output/
+video/images/
+video/cache/
+*.mp4
+*.mp3
+*.srt
+*.subtitle.txt
+android/app/build/
+android/.gradle/
+.gradle/
+
+# Sauvegardes locales
+*.backup-*
+*.before-*
+server.js.backup-*
+server.js.before-*
+video-engine.js

@@ -7,6 +7,8 @@ const os = require("os");
 const crypto = require("crypto");
 const { EdgeTTS } = require("node-edge-tts");
 const { registerExpressiveTTS } = require("./expressive-engine");
+const { registerVideoEngine } = require("./video-engine");
+const { buildReel } = require("./video/reel-engine");
 
 const app = express();
 const PORT = 3000;
@@ -20,7 +22,7 @@ app.get("/api/voices", async (req, res) => {
 
         if (!apiKey) {
             return res.status(500).json({
-                error: "Clé API ElevenLabs absente du serveur."
+                error: "ClÃ© API ElevenLabs absente du serveur."
             });
         }
 
@@ -37,7 +39,7 @@ app.get("/api/voices", async (req, res) => {
             console.error("Erreur ElevenLabs :", errorText);
 
             return res.status(response.status).json({
-                error: "Impossible de récupérer les voix ElevenLabs.",
+                error: "Impossible de rÃ©cupÃ©rer les voix ElevenLabs.",
                 details: errorText
             });
         }
@@ -47,10 +49,10 @@ app.get("/api/voices", async (req, res) => {
         res.json(data);
 
     } catch (error) {
-        console.error("Erreur récupération des voix :", error);
+        console.error("Erreur rÃ©cupÃ©ration des voix :", error);
 
         res.status(500).json({
-            error: "Erreur interne lors de la récupération des voix."
+            error: "Erreur interne lors de la rÃ©cupÃ©ration des voix."
         });
     }
 });
@@ -67,7 +69,7 @@ app.post("/api/tts", async (req, res) => {
 
         if (!voiceId) {
             return res.status(400).json({
-                error: "Aucune voix n'a été sélectionnée."
+                error: "Aucune voix n'a Ã©tÃ© sÃ©lectionnÃ©e."
             });
         }
 
@@ -75,7 +77,7 @@ app.post("/api/tts", async (req, res) => {
 
         if (!apiKey) {
             return res.status(500).json({
-                error: "Clé API ElevenLabs absente du serveur."
+                error: "ClÃ© API ElevenLabs absente du serveur."
             });
         }
 
@@ -121,13 +123,13 @@ app.post("/api/tts", async (req, res) => {
         console.error("Erreur serveur TTS :", error);
 
         res.status(500).json({
-            error: "Erreur interne lors de la génération audio."
+            error: "Erreur interne lors de la gÃ©nÃ©ration audio."
         });
     }
 });
 
 /*
- * GÉNÉRATION AUDIO MICROSOFT
+ * GÃ‰NÃ‰RATION AUDIO MICROSOFT
  * Texte + voix Microsoft + vitesse -> MP3
  */
 
@@ -181,7 +183,7 @@ app.post("/api/tts-microsoft", async (req, res) => {
 
         if (!voiceName) {
             return res.status(400).json({
-                error: "Aucune voix Microsoft n'a été sélectionnée."
+                error: "Aucune voix Microsoft n'a Ã©tÃ© sÃ©lectionnÃ©e."
             });
         }
 
@@ -189,7 +191,7 @@ app.post("/api/tts-microsoft", async (req, res) => {
 
         if (!microsoftVoice) {
             return res.status(400).json({
-                error: "Cette voix Microsoft n'est pas autorisée."
+                error: "Cette voix Microsoft n'est pas autorisÃ©e."
             });
         }
 
@@ -222,11 +224,11 @@ app.post("/api/tts-microsoft", async (req, res) => {
         res.send(audioBuffer);
 
     } catch (error) {
-        console.error("Erreur génération Microsoft TTS :", error);
+        console.error("Erreur gÃ©nÃ©ration Microsoft TTS :", error);
 
         if (!res.headersSent) {
             res.status(500).json({
-                error: "Impossible de générer le fichier audio Microsoft.",
+                error: "Impossible de gÃ©nÃ©rer le fichier audio Microsoft.",
                 details: error.message
             });
         }
@@ -236,14 +238,88 @@ app.post("/api/tts-microsoft", async (req, res) => {
             try {
                 await fs.unlink(outputPath);
             } catch {
-                // Le fichier temporaire peut déjà avoir été supprimé.
+                // Le fichier temporaire peut dÃ©jÃ  avoir Ã©tÃ© supprimÃ©.
             }
         }
     }
 });
 
 registerExpressiveTTS(app, { findMicrosoftVoice, convertSpeedToRate });
+registerVideoEngine(app);
+
+
+app.post("/api/generate-reel", async (req, res) => {
+    try {
+        const {
+            text,
+            voiceName,
+            speed = 1,
+            mode = "intelligent",
+            language = "fr-FR"
+        } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({
+                error: "Le texte est vide."
+            });
+        }
+
+        if (!voiceName) {
+            return res.status(400).json({
+                error: "Aucune voix Microsoft n'a Ã©tÃ© sÃ©lectionnÃ©e."
+            });
+        }
+
+        console.log(
+            `NaturalReader Reel : ${language} / ${voiceName} / ${mode}`
+        );
+
+        const result = await buildReel({
+            text: text.trim(),
+            voiceName,
+            speed,
+            mode
+        });
+
+        const videoBuffer =
+            await fs.readFile(
+                result.outputPath
+            );
+
+        res.set({
+            "Content-Type": "video/mp4",
+            "Content-Length": videoBuffer.length,
+            "Content-Disposition":
+                'attachment; filename="NaturalReader-Reel.mp4"',
+            "Cache-Control": "no-cache",
+            "X-NaturalReader-Scenes":
+                String(result.sceneCount),
+            "X-NaturalReader-Voice":
+                voiceName,
+            "X-NaturalReader-Mode":
+                mode,
+        });
+
+        res.send(videoBuffer);
+
+    } catch (error) {
+        console.error(
+            "Erreur NaturalReader Reel :",
+            error
+        );
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                error:
+                    "Impossible de gÃ©nÃ©rer le Reel.",
+                details:
+                    error.message
+            });
+        }
+    }
+});
 
 app.listen(PORT, () => {
-    console.log(`NaturalReader lancé sur le port ${PORT}`);
+    console.log(`NaturalReader lancÃ© sur le port ${PORT}`);
 });
+

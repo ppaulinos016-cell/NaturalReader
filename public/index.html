@@ -120,6 +120,15 @@
             <button id="downloadButton" class="secondary-button" disabled>
                 ⬇ Télécharger l'audio
             </button>
+
+            <button id="generateVideoButton" class="video-button">
+                🎬 Générer la vidéo
+            </button>
+
+            
+<button id="downloadVideoButton" class="secondary-button" disabled>
+                🎥 Télécharger la vidéo
+            </button>
         </div>
 
     </section>
@@ -153,6 +162,22 @@
 </footer>
 
 <script src="app.js"></script>
+
+<div id="videoPreviewContainer" class="video-preview-container">
+    <video
+        id="videoPreview"
+        class="video-preview"
+        controls
+        playsinline
+        preload="metadata">
+    </video>
+
+    <div
+        id="videoSubtitle"
+        class="video-subtitle"
+        aria-live="polite">
+    </div>
+</div>
 </body>
 </html>
 

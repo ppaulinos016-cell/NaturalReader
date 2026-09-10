@@ -4,6 +4,10 @@ const voiceSelect = document.getElementById("voice");
 const speedSelect = document.getElementById("speed");
 const readingMode = document.getElementById("readingMode");
 const downloadButton = document.getElementById("downloadButton");
+const generateVideoButton = document.getElementById("generateVideoButton");
+const downloadVideoButton = document.getElementById("downloadVideoButton");
+const videoPreview = document.getElementById("videoPreview");
+const videoSubtitle = document.getElementById("videoSubtitle");
 
 const readButton = document.getElementById("readButton");
 const pauseButton = document.getElementById("pauseButton");
@@ -21,6 +25,9 @@ let voices = [];
 let currentAudio = null;
 let currentAudioUrl = null;
 let audioReadyForDownload = false;
+let currentVideoUrl = null;
+let videoReadyForDownload = false;
+let videoSubtitleTimings = [];
 
 function getText() {
     return textInput.value.replace(/\r\n/g, "\n");
@@ -308,6 +315,176 @@ async function speak() {
             `❌ ${error.message}`;
     }
 }
+
+
+function splitSubtitleSentences(text) {
+    return text
+        .replace(/\\r\\n/g, "\\n")
+        .split(/(?<=[.!?…。！？])\\s+/)
+        .map(value => value.trim())
+        .filter(Boolean);
+}
+
+function setupVideoSubtitles() {
+    if (!videoPreview || !videoSubtitle) {
+        return;
+    }
+
+    if (videoPreview._naturalReaderSubtitleHandler) {
+        videoPreview.removeEventListener(
+            "timeupdate",
+            videoPreview._naturalReaderSubtitleHandler
+        );
+    }
+
+    const handler = () => {
+        const currentTime =
+            Number(videoPreview.currentTime) || 0;
+
+        if (!videoSubtitleTimings.length) {
+            videoSubtitle.textContent = "";
+            return;
+        }
+
+        const current =
+            videoSubtitleTimings.find(
+                item =>
+                    currentTime >= item.start &&
+                    currentTime < item.end
+            );
+
+        videoSubtitle.textContent =
+            current
+                ? current.narration
+                : "";
+    };
+
+    videoPreview._naturalReaderSubtitleHandler =
+        handler;
+
+    videoPreview.addEventListener(
+        "timeupdate",
+        handler
+    );
+
+    handler();
+}
+async function generateVideo() {
+    const text = getText().trim();
+
+    if (!text) {
+        readingStatus.textContent =
+            "⚠️ Aucun texte à transformer en vidéo.";
+        return;
+    }
+
+    const index = Number(voiceSelect.value);
+
+    if (Number.isNaN(index) || !voices[index]) {
+        readingStatus.textContent =
+            "⚠️ Sélectionnez une voix.";
+        return;
+    }
+
+    const selectedVoice = voices[index].name;
+    const speed = Number(speedSelect.value);
+    const mode =
+        readingMode ? readingMode.value : "normal";
+    const language = languageSelect.value;
+
+    if (currentVideoUrl) {
+        URL.revokeObjectURL(currentVideoUrl);
+        currentVideoUrl = null;
+    }
+
+    videoReadyForDownload = false;
+    downloadVideoButton.disabled = true;
+    generateVideoButton.disabled = true;
+
+    const modeLabel =
+        readingMode
+            ? readingMode.options[
+                readingMode.selectedIndex
+            ].text
+            : "Normal";
+
+    readingStatus.textContent =
+        `🎬 Analyse des scènes et génération du Reel — ${selectedVoice} — ${modeLabel}...`;
+
+    try {
+        const response =
+            await fetch("/api/generate-reel", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text,
+                    voiceName: selectedVoice,
+                    speed,
+                    mode,
+                    language
+                })
+            });
+
+        if (!response.ok) {
+            let message =
+                "Erreur lors de la génération vidéo.";
+
+            try {
+                const data =
+                    await response.json();
+
+                if (data.error) {
+                    message = data.error;
+                }
+            } catch {
+                // Réponse non JSON.
+            }
+
+            throw new Error(message);
+        }
+
+        const blob =
+            await response.blob();
+
+        if (!blob.size) {
+            throw new Error(
+                "La vidéo générée est vide."
+            );
+        }
+
+        currentVideoUrl =
+            URL.createObjectURL(blob);
+
+        videoReadyForDownload = true;
+        downloadVideoButton.disabled = false;
+
+        if (videoPreview) {
+            videoPreview.src = currentVideoUrl;
+            videoPreview.load();
+            setupVideoSubtitles();
+        }
+        generateVideoButton.disabled = false;
+
+        readingStatus.textContent =
+            "✅ Vidéo générée avec succès. Elle est prête à être téléchargée.";
+
+    } catch (error) {
+        console.error(
+            "Erreur vidéo NaturalReader :",
+            error
+        );
+
+        videoReadyForDownload = false;
+        downloadVideoButton.disabled = true;
+        generateVideoButton.disabled = false;
+
+        readingStatus.textContent =
+            `❌ ${error.message}`;
+    }
+}
+
 function pauseReading() {
     if (!currentAudio) {
         return;
@@ -401,3 +578,40 @@ downloadButton.addEventListener("click", () => {
 });
 
 updateDownloadButton();
+
+
+generateVideoButton.addEventListener("click", generateVideo);
+
+downloadVideoButton.addEventListener("click", () => {
+    if (!videoReadyForDownload || !currentVideoUrl) {
+        readingStatus.textContent =
+            "⚠️ Générez d'abord une vidéo.";
+        return;
+    }
+
+    const link =
+        document.createElement("a");
+
+    link.href = currentVideoUrl;
+    link.download =
+        "NaturalReader-Reel.mp4";
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    readingStatus.textContent =
+        "✅ Téléchargement de la vidéo lancé.";
+});
+
+
+if (videoPreview) {
+    videoPreview.addEventListener("play", () => {
+        videoSubtitle.style.display = "block";
+    });
+
+    videoPreview.addEventListener("pause", () => {
+        videoSubtitle.style.display = "block";
+    });
+}
