@@ -19,3 +19,14 @@ android/.gradle/
 server.js.backup-*
 server.js.before-*
 
+# Sauvegardes locales
+*.backup-*
+*.before-*
+server.js.backup-*
+server.js.before-*
+backup-*/
+video/backup-*/
+
+# Android / Capacitor : non nécessaires au déploiement web
+android/
+capacitor.config.json

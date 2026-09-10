@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -17,7 +17,7 @@
 
     <section class="hero">
         <h1>Natural Reader</h1>
-        <p>Écrivez ou collez votre texte et faites-le lire naturellement.</p>
+        <p>Écrivez, collez, importez ou traduisez votre texte et faites-le lire naturellement.</p>
     </section>
 
     <section class="reader-card">
@@ -49,6 +49,7 @@
                     <option value="1.5">Très rapide</option>
                 </select>
             </div>
+
             <div class="control-group">
                 <label for="readingMode">Expression / Émotion</label>
                 <select id="readingMode">
@@ -73,12 +74,96 @@
             </div>
         </div>
 
+        <div class="translation-panel">
+            <div class="control-group translation-control">
+                <label for="translationLanguage">Traduire en</label>
+                <select id="translationLanguage">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                </select>
+            </div>
+
+            <button id="translateButton" class="translation-button" type="button">
+                🌍 Traduire
+            </button>
+        </div>
+
+        <div class="translation-download-panel">
+            <span class="translation-download-title">Télécharger le résultat</span>
+
+            <div class="translation-download-buttons">
+                <button
+                    id="downloadTranslationPdfButton"
+                    class="translation-download-button pdf-download-button"
+                    type="button"
+                    disabled>
+                    📄 Télécharger en PDF
+                </button>
+
+                <button
+                    id="downloadTranslationImageButton"
+                    class="translation-download-button image-download-button"
+                    type="button"
+                    disabled>
+                    🖼️ Télécharger en image
+                </button>
+            </div>
+        </div>
+
         <div class="text-area-wrapper">
             <textarea
                 id="text"
                 placeholder="Écrivez ou collez votre texte ici..."
                 maxlength="10000"
             ></textarea>
+
+            <button
+                id="importButton"
+                class="import-button"
+                type="button"
+                aria-label="Importer une photo, prendre une photo ou choisir un PDF"
+                title="Photo, caméra ou PDF">
+                +
+            </button>
+
+            <input
+                id="photoInput"
+                type="file"
+                accept="image/*"
+                hidden>
+
+            <input
+                id="cameraInput"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden>
+
+            <input
+                id="pdfInput"
+                type="file"
+                accept="application/pdf,.pdf"
+                hidden>
+
+            <div
+                id="importMenu"
+                class="import-menu"
+                hidden>
+
+                <button id="choosePhotoButton" type="button">
+                    🖼️ Choisir une photo
+                </button>
+
+                <button id="takePhotoButton" type="button">
+                    📷 Prendre une photo
+                </button>
+
+                <button id="choosePdfButton" type="button">
+                    📄 Choisir un PDF
+                </button>
+
+            </div>
 
             <div class="text-info">
                 <span id="characterCount">0 caractère</span>
@@ -87,15 +172,15 @@
         </div>
 
         <div class="text-actions">
-            <button id="cleanButton" class="text-button">
+            <button id="cleanButton" class="text-button" type="button">
                 ✨ Nettoyer
             </button>
 
-            <button id="detectButton" class="text-button">
+            <button id="detectButton" class="text-button" type="button">
                 🌍 Détecter la langue
             </button>
 
-            <button id="clearButton" class="text-button danger">
+            <button id="clearButton" class="text-button danger" type="button">
                 🗑 Effacer
             </button>
         </div>
@@ -105,28 +190,27 @@
         </div>
 
         <div class="controls">
-            <button id="readButton" class="primary-button">
+            <button id="readButton" class="primary-button" type="button">
                 ▶ Lire
             </button>
 
-            <button id="pauseButton" class="secondary-button">
+            <button id="pauseButton" class="secondary-button" type="button">
                 ⏸ Pause
             </button>
 
-            <button id="stopButton" class="secondary-button">
+            <button id="stopButton" class="secondary-button" type="button">
                 ⏹ Arrêter
             </button>
 
-            <button id="downloadButton" class="secondary-button" disabled>
+            <button id="downloadButton" class="secondary-button" disabled type="button">
                 ⬇ Télécharger l'audio
             </button>
 
-            <button id="generateVideoButton" class="video-button">
+            <button id="generateVideoButton" class="video-button" type="button">
                 🎬 Générer la vidéo
             </button>
 
-            
-<button id="downloadVideoButton" class="secondary-button" disabled>
+            <button id="downloadVideoButton" class="secondary-button" disabled type="button">
                 🎥 Télécharger la vidéo
             </button>
         </div>
@@ -138,7 +222,7 @@
         <div class="feature">
             <div class="feature-icon">🗣️</div>
             <h2>Voix naturelles</h2>
-            <p>Des voix expressives seront intégrées dans les prochaines étapes.</p>
+            <p>Des voix naturelles et expressives pour une lecture agréable.</p>
         </div>
 
         <div class="feature">
@@ -150,7 +234,25 @@
         <div class="feature">
             <div class="feature-icon">✨</div>
             <h2>Lecture expressive</h2>
-            <p>L'intonation, les pauses et les émotions seront ajoutées progressivement.</p>
+            <p>L'intonation, les pauses et les émotions peuvent être adaptées au texte.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">🌍</div>
+            <h2>Traduction</h2>
+            <p>Traduisez rapidement vos textes français, anglais ou allemands.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">📷</div>
+            <h2>Photo vers texte</h2>
+            <p>Importez une image ou utilisez directement la caméra pour récupérer son texte.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">📄</div>
+            <h2>PDF vers texte</h2>
+            <p>Importez un PDF et récupérez automatiquement son texte dans le lecteur.</p>
         </div>
 
     </section>
@@ -178,8 +280,7 @@
         aria-live="polite">
     </div>
 </div>
+
 </body>
 </html>
-
-
 

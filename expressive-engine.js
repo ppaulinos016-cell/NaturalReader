@@ -414,71 +414,85 @@ async function registerExpressiveTTS(
                 recursive: true
             });
 
-            const generated = await Promise.all(
-                segments.map(async (segment, index) => {
-                    const analysis =
-                        analyzeSegment(
-                            segment,
-                            mode,
-                            index,
-                            segments.length
-                        );
+            const generated = [];
 
-                    const baseSpeed =
-                        Number(speed) || 1;
+            for (
+                let index = 0;
+                index < segments.length;
+                index++
+            ) {
+                const segment =
+                    segments[index];
 
-                    const effectiveSpeed =
-                        Math.max(
-                            0.5,
-                            Math.min(
-                                2,
-                                baseSpeed *
-                                analysis.rateMultiplier
-                            )
-                        );
+                const analysis =
+                    analyzeSegment(
+                        segment,
+                        mode,
+                        index,
+                        segments.length
+                    );
 
-                    const rate =
-                        convertSpeedToRate(
-                            effectiveSpeed
-                        );
+                const baseSpeed =
+                    Number(speed) || 1;
 
-                    const audioPath = path.join(
+                const effectiveSpeed =
+                    Math.max(
+                        0.5,
+                        Math.min(
+                            2,
+                            baseSpeed *
+                            analysis.rateMultiplier
+                        )
+                    );
+
+                const rate =
+                    convertSpeedToRate(
+                        effectiveSpeed
+                    );
+
+                const audioPath =
+                    path.join(
                         tempRoot,
                         `segment-${String(index).padStart(4, "0")}.mp3`
                     );
 
-                    const silencePath = path.join(
+                const silencePath =
+                    path.join(
                         tempRoot,
                         `silence-${String(index).padStart(4, "0")}.mp3`
                     );
 
-                    const tts = new EdgeTTS({
+                const tts =
+                    new EdgeTTS({
                         voice: microsoftVoice,
                         outputFormat:
                             "audio-24khz-48kbitrate-mono-mp3",
                         rate,
-                        pitch: analysis.pitch,
+                        pitch:
+                            analysis.pitch,
                         volume: "default"
                     });
 
-                    await tts.ttsPromise(
-                        segment,
-                        audioPath
-                    );
+                console.log(
+                    `TTS expressif : segment ${index + 1}/${segments.length}`
+                );
 
-                    await createSilence(
-                        silencePath,
-                        analysis.pauseAfterMs
-                    );
+                await tts.ttsPromise(
+                    segment,
+                    audioPath
+                );
 
-                    return {
-                        index,
-                        audioPath,
-                        silencePath
-                    };
-                })
-            );
+                await createSilence(
+                    silencePath,
+                    analysis.pauseAfterMs
+                );
 
+                generated.push({
+                    index,
+                    audioPath,
+                    silencePath
+                });
+            }
             const concatList =
                 path.join(
                     tempRoot,
@@ -590,3 +604,4 @@ async function registerExpressiveTTS(
 module.exports = {
     registerExpressiveTTS
 };
+

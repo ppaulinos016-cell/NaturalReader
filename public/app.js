@@ -615,3 +615,519 @@ if (videoPreview) {
         videoSubtitle.style.display = "block";
     });
 }
+
+/* ================================
+   TRADUCTION
+================================ */
+
+const translationLanguage =
+    document.getElementById("translationLanguage");
+
+const translateButton =
+    document.getElementById("translateButton");
+
+const downloadTranslationPdfButton =
+    document.getElementById("downloadTranslationPdfButton");
+
+const downloadTranslationImageButton =
+    document.getElementById("downloadTranslationImageButton");
+
+const importButton =
+    document.getElementById("importButton");
+
+const importMenu =
+    document.getElementById("importMenu");
+
+const choosePhotoButton =
+    document.getElementById("choosePhotoButton");
+
+const takePhotoButton =
+    document.getElementById("takePhotoButton");
+
+const choosePdfButton =
+    document.getElementById("choosePdfButton");
+
+const photoInput =
+    document.getElementById("photoInput");
+
+const cameraInput =
+    document.getElementById("cameraInput");
+
+const pdfInput =
+    document.getElementById("pdfInput");
+
+let translationReady = false;
+
+function updateTranslationDownloadButtons() {
+    const disabled = !translationReady || !getText().trim();
+
+    if (downloadTranslationPdfButton) {
+        downloadTranslationPdfButton.disabled = disabled;
+    }
+
+    if (downloadTranslationImageButton) {
+        downloadTranslationImageButton.disabled = disabled;
+    }
+}
+
+async function translateText() {
+    const text = getText().trim();
+
+    if (!text) {
+        readingStatus.textContent =
+            "⚠️ Aucun texte à traduire.";
+        return;
+    }
+
+    const target =
+        translationLanguage?.value || "fr";
+
+    const sourceMap = {
+        "fr-FR": "fr",
+        "en-GB": "en",
+        "de-DE": "de"
+    };
+
+    const source =
+        sourceMap[languageSelect.value] || "auto";
+
+    if (source === target) {
+        translationReady = true;
+        updateTranslationDownloadButtons();
+
+        readingStatus.textContent =
+            "ℹ️ Le texte est déjà dans cette langue.";
+
+        return;
+    }
+
+    if (translateButton) {
+        translateButton.disabled = true;
+    }
+
+    translationReady = false;
+    updateTranslationDownloadButtons();
+
+    readingStatus.textContent =
+        "🌍 Traduction en cours...";
+
+    try {
+        const response = await fetch(
+            "/api/translate",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text,
+                    targetLanguage: target,
+                    sourceLanguage: source
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error ||
+                "Impossible de traduire le texte."
+            );
+        }
+
+        if (!data.text) {
+            throw new Error(
+                "La traduction reçue est vide."
+            );
+        }
+
+        textInput.value =
+            data.text;
+
+        const targetToReaderLanguage = {
+            fr: "fr-FR",
+            en: "en-GB",
+            de: "de-DE"
+        };
+
+        if (targetToReaderLanguage[target]) {
+            languageSelect.value =
+                targetToReaderLanguage[target];
+
+            loadVoices();
+        }
+
+        translationReady = true;
+        updateCounters();
+        updateTranslationDownloadButtons();
+
+        const names = {
+            fr: "Français",
+            en: "English",
+            de: "Deutsch"
+        };
+
+        readingStatus.textContent =
+            `✅ Texte traduit en ${names[target]}.`;
+
+    } catch (error) {
+        console.error(
+            "Erreur traduction NaturalReader :",
+            error
+        );
+
+        translationReady = false;
+        updateTranslationDownloadButtons();
+
+        readingStatus.textContent =
+            `❌ ${error.message}`;
+
+    } finally {
+        if (translateButton) {
+            translateButton.disabled = false;
+        }
+    }
+}
+
+
+/* ================================
+   IMPORT PHOTO / CAMÉRA / PDF
+================================ */
+
+async function extractImportedFile(file) {
+    if (!file) {
+        return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+        readingStatus.textContent =
+            "⚠️ Le fichier est trop volumineux (15 Mo maximum).";
+        return;
+    }
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "file",
+        file
+    );
+
+    readingStatus.textContent =
+        file.type === "application/pdf"
+            ? "📄 Extraction du texte du PDF..."
+            : "📷 Analyse de l'image et extraction du texte...";
+
+    try {
+        const response = await fetch(
+            "/api/extract-document",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error ||
+                "Impossible d'extraire le texte."
+            );
+        }
+
+        if (!data.text) {
+            throw new Error(
+                "Aucun texte n'a été trouvé."
+            );
+        }
+
+        textInput.value =
+            data.text;
+
+        translationReady = false;
+
+        updateCounters();
+        updateTranslationDownloadButtons();
+
+        readingStatus.textContent =
+            data.type === "pdf"
+                ? "✅ Texte extrait du PDF."
+                : "✅ Texte extrait de l'image.";
+
+    } catch (error) {
+        console.error(
+            "Erreur import NaturalReader :",
+            error
+        );
+
+        readingStatus.textContent =
+            `❌ ${error.message}`;
+
+    } finally {
+        if (photoInput) {
+            photoInput.value = "";
+        }
+
+        if (cameraInput) {
+            cameraInput.value = "";
+        }
+
+        if (pdfInput) {
+            pdfInput.value = "";
+        }
+    }
+}
+
+
+/* ================================
+   MENU +
+================================ */
+
+if (importButton && importMenu) {
+    importButton.addEventListener(
+        "click",
+        event => {
+            event.stopPropagation();
+            importMenu.hidden =
+                !importMenu.hidden;
+        }
+    );
+
+    document.addEventListener(
+        "click",
+        event => {
+            if (
+                !importMenu.contains(event.target) &&
+                !importButton.contains(event.target)
+            ) {
+                importMenu.hidden = true;
+            }
+        }
+    );
+}
+
+if (choosePhotoButton && photoInput) {
+    choosePhotoButton.addEventListener(
+        "click",
+        () => {
+            importMenu.hidden = true;
+            photoInput.click();
+        }
+    );
+}
+
+if (takePhotoButton && cameraInput) {
+    takePhotoButton.addEventListener(
+        "click",
+        () => {
+            importMenu.hidden = true;
+            cameraInput.click();
+        }
+    );
+}
+
+if (choosePdfButton && pdfInput) {
+    choosePdfButton.addEventListener(
+        "click",
+        () => {
+            importMenu.hidden = true;
+            pdfInput.click();
+        }
+    );
+}
+
+if (photoInput) {
+    photoInput.addEventListener(
+        "change",
+        () => {
+            extractImportedFile(
+                photoInput.files?.[0]
+            );
+        }
+    );
+}
+
+if (cameraInput) {
+    cameraInput.addEventListener(
+        "change",
+        () => {
+            extractImportedFile(
+                cameraInput.files?.[0]
+            );
+        }
+    );
+}
+
+if (pdfInput) {
+    pdfInput.addEventListener(
+        "change",
+        () => {
+            extractImportedFile(
+                pdfInput.files?.[0]
+            );
+        }
+    );
+}
+
+
+/* ================================
+   TÉLÉCHARGEMENT PDF / IMAGE
+================================ */
+
+async function downloadTranslation(format) {
+    const text =
+        getText().trim();
+
+    if (!translationReady || !text) {
+        readingStatus.textContent =
+            "⚠️ Traduisez d'abord le texte.";
+        return;
+    }
+
+    const language =
+        translationLanguage?.value || "fr";
+
+    const endpoint =
+        format === "pdf"
+            ? "/api/export-pdf"
+            : "/api/export-image";
+
+    const filename =
+        format === "pdf"
+            ? "NaturalReader-traduction.pdf"
+            : "NaturalReader-traduction.svg";
+
+    readingStatus.textContent =
+        format === "pdf"
+            ? "📄 Création du PDF..."
+            : "🖼️ Création de l'image...";
+
+    if (format === "pdf" &&
+        downloadTranslationPdfButton) {
+        downloadTranslationPdfButton.disabled =
+            true;
+    }
+
+    if (format === "image" &&
+        downloadTranslationImageButton) {
+        downloadTranslationImageButton.disabled =
+            true;
+    }
+
+    try {
+        const response =
+            await fetch(
+                endpoint,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        text,
+                        language
+                    })
+                }
+            );
+
+        if (!response.ok) {
+            let message =
+                "Impossible de créer le fichier.";
+
+            try {
+                const data =
+                    await response.json();
+
+                if (data.error) {
+                    message =
+                        data.error;
+                }
+            } catch {
+                // Réponse non JSON.
+            }
+
+            throw new Error(message);
+        }
+
+        const blob =
+            await response.blob();
+
+        if (!blob.size) {
+            throw new Error(
+                "Le fichier généré est vide."
+            );
+        }
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+        link.download = filename;
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(
+            () => URL.revokeObjectURL(url),
+            1000
+        );
+
+        readingStatus.textContent =
+            format === "pdf"
+                ? "✅ PDF téléchargé."
+                : "✅ Image téléchargée.";
+
+    } catch (error) {
+        console.error(
+            "Erreur export NaturalReader :",
+            error
+        );
+
+        readingStatus.textContent =
+            `❌ ${error.message}`;
+
+    } finally {
+        updateTranslationDownloadButtons();
+    }
+}
+
+if (translateButton) {
+    translateButton.addEventListener(
+        "click",
+        translateText
+    );
+}
+
+if (downloadTranslationPdfButton) {
+    downloadTranslationPdfButton.addEventListener(
+        "click",
+        () => downloadTranslation("pdf")
+    );
+}
+
+if (downloadTranslationImageButton) {
+    downloadTranslationImageButton.addEventListener(
+        "click",
+        () => downloadTranslation("image")
+    );
+}
+
+textInput.addEventListener(
+    "input",
+    () => {
+        translationReady = false;
+        updateTranslationDownloadButtons();
+    }
+);
+
+updateTranslationDownloadButtons();
+

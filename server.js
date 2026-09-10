@@ -5,13 +5,14 @@ const path = require("path");
 const fs = require("fs/promises");
 const os = require("os");
 const crypto = require("crypto");
+const PDFDocument = require("pdfkit");
 const { EdgeTTS } = require("node-edge-tts");
 const { registerExpressiveTTS } = require("./expressive-engine");
 const { registerVideoEngine } = require("./video-engine");
 const { buildReel } = require("./video/reel-engine");
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -319,7 +320,361 @@ app.post("/api/generate-reel", async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+
+app.post("/api/translate", async (req, res) => {
+    try {
+        const { text, targetLanguage, sourceLanguage = "auto" } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({ error: "Le texte à traduire est vide." });
+        }
+
+        if (!["fr", "en", "de"].includes(targetLanguage)) {
+            return res.status(400).json({ error: "Langue de traduction invalide." });
+        }
+
+        const source = ["fr", "en", "de"].includes(sourceLanguage)
+            ? sourceLanguage
+            : "auto";
+
+        if (source === targetLanguage) {
+            return res.json({
+                text: text.trim(),
+                sourceLanguage: source,
+                targetLanguage
+            });
+        }
+
+        const normalized = text.replace(/\r\n/g, "\n").trim();
+        const MAX_QUERY = 450;
+        const chunks = [];
+        let remaining = normalized;
+
+        while (remaining.length > MAX_QUERY) {
+            let cut = remaining.lastIndexOf("\n", MAX_QUERY);
+
+            if (cut < 150) {
+                cut = remaining.lastIndexOf(" ", MAX_QUERY);
+            }
+
+            if (cut < 150) {
+                cut = MAX_QUERY;
+            }
+
+            chunks.push(remaining.slice(0, cut).trim());
+            remaining = remaining.slice(cut).trimStart();
+        }
+
+        if (remaining) {
+            chunks.push(remaining);
+        }
+
+        const translatedChunks = [];
+
+        for (const chunk of chunks) {
+            const langPair =
+                `${source === "auto" ? "autodetect" : source}|${targetLanguage}`;
+
+            const url =
+                `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=${encodeURIComponent(langPair)}`;
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(
+                    `Service de traduction indisponible (${response.status}).`
+                );
+            }
+
+            const data = await response.json();
+            const translated =
+                data?.responseData?.translatedText?.trim();
+
+            if (!translated) {
+                throw new Error(
+                    "Aucune traduction n'a été retournée."
+                );
+            }
+
+            translatedChunks.push(translated);
+        }
+
+        res.json({
+            text: translatedChunks.join("\n\n").trim(),
+            sourceLanguage: source,
+            targetLanguage,
+            chunks: translatedChunks.length
+        });
+
+    } catch (error) {
+        console.error("Erreur traduction :", error);
+
+        res.status(500).json({
+            error: "Impossible de traduire le texte.",
+            details: error.message
+        });
+    }
+});
+
+app.post("/api/export-pdf", async (req, res) => {
+    try {
+        const { text, language = "fr" } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({
+                error: "Aucun texte à exporter."
+            });
+        }
+
+        const doc = new PDFDocument({
+            size: "A4",
+            margin: 50,
+            info: {
+                Title: "NaturalReader - Traduction",
+                Author: "NaturalReader"
+            }
+        });
+
+        const chunks = [];
+
+        doc.on("data", chunk => chunks.push(chunk));
+
+        doc.on("end", () => {
+            const buffer = Buffer.concat(chunks);
+
+            res.set({
+                "Content-Type": "application/pdf",
+                "Content-Length": buffer.length,
+                "Content-Disposition":
+                    'attachment; filename="NaturalReader-traduction.pdf"',
+                "Cache-Control": "no-cache"
+            });
+
+            res.send(buffer);
+        });
+
+        const titles = {
+            fr: "NaturalReader — Traduction",
+            en: "NaturalReader — Translation",
+            de: "NaturalReader — Übersetzung"
+        };
+
+        doc.fontSize(20)
+            .font("Helvetica-Bold")
+            .text(titles[language] || titles.fr, {
+                align: "center"
+            });
+
+        doc.moveDown();
+
+        doc.fontSize(11)
+            .font("Helvetica")
+            .text(text.trim(), {
+                align: "left",
+                lineGap: 5
+            });
+
+        doc.end();
+
+    } catch (error) {
+        console.error("Erreur export PDF :", error);
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: "Impossible de créer le PDF.",
+                details: error.message
+            });
+        }
+    }
+});
+
+
+app.post("/api/export-image", async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({
+                error: "Aucun texte à exporter."
+            });
+        }
+
+        const escapedText = text
+            .trim()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&apos;");
+
+        const lines = [];
+        const maxChars = 70;
+
+        escapedText.split(/\r?\n/).forEach(paragraph => {
+            if (!paragraph.trim()) {
+                lines.push("");
+                return;
+            }
+
+            let remaining = paragraph.trim();
+
+            while (remaining.length > maxChars) {
+                let cut = remaining.lastIndexOf(" ", maxChars);
+
+                if (cut < 20) {
+                    cut = maxChars;
+                }
+
+                lines.push(remaining.slice(0, cut));
+                remaining = remaining.slice(cut).trimStart();
+            }
+
+            lines.push(remaining);
+        });
+
+        const lineHeight = 34;
+        const top = 100;
+        const height = Math.max(
+            400,
+            top + lines.length * lineHeight + 80
+        );
+
+        const svgLines = lines.map((line, index) => {
+            const safeLine = line || " ";
+            const y = top + index * lineHeight;
+
+            return `
+                <text
+                    x="70"
+                    y="${y}"
+                    font-family="Arial, Helvetica, sans-serif"
+                    font-size="24"
+                    fill="#111827">${safeLine}</text>
+            `;
+        }).join("");
+
+        const svg = `
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200"
+     height="${height}"
+     viewBox="0 0 1200 ${height}">
+    <rect width="1200" height="${height}" fill="#ffffff"/>
+    <rect x="35" y="35" width="1130" height="${height - 70}"
+          rx="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="70" y="70"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="28"
+          font-weight="bold"
+          fill="#2563eb">NaturalReader</text>
+    ${svgLines}
+</svg>`;
+
+        const buffer = Buffer.from(svg, "utf8");
+
+        res.set({
+            "Content-Type": "image/svg+xml",
+            "Content-Length": buffer.length,
+            "Content-Disposition":
+                'attachment; filename="NaturalReader-traduction.svg"',
+            "Cache-Control": "no-cache"
+        });
+
+        res.send(buffer);
+
+    } catch (error) {
+        console.error("Erreur export image :", error);
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: "Impossible de créer l'image.",
+                details: error.message
+            });
+        }
+    }
+});
+
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`NaturalReader lancÃ© sur le port ${PORT}`);
+});
+
+
+const multer = require("multer");
+const Tesseract = require("tesseract.js");
+const pdfParse = require("pdf-parse");
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 15 * 1024 * 1024
+    }
+});
+
+app.post("/api/extract-document", upload.single("file"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                error: "Aucun fichier n'a été envoyé."
+            });
+        }
+
+        const mimeType = req.file.mimetype || "";
+
+        if (mimeType.startsWith("image/")) {
+            const result = await Tesseract.recognize(
+                req.file.buffer,
+                "eng+fra+deu",
+                {
+                    logger: info => {
+                        if (info.status) {
+                            console.log(
+                                `OCR : ${info.status} ${Math.round((info.progress || 0) * 100)}%`
+                            );
+                        }
+                    }
+                }
+            );
+
+            const text = (result.data.text || "").trim();
+
+            if (!text) {
+                return res.status(422).json({
+                    error: "Aucun texte lisible n'a été trouvé dans l'image."
+                });
+            }
+
+            return res.json({
+                type: "image",
+                text
+            });
+        }
+
+        if (mimeType === "application/pdf") {
+            const result = await pdfParse(req.file.buffer);
+            const text = (result.text || "").trim();
+
+            if (!text) {
+                return res.status(422).json({
+                    error: "Aucun texte exploitable n'a été trouvé dans le PDF."
+                });
+            }
+
+            return res.json({
+                type: "pdf",
+                text
+            });
+        }
+
+        return res.status(400).json({
+            error: "Format non pris en charge. Utilisez une photo ou un PDF."
+        });
+
+    } catch (error) {
+        console.error("Erreur extraction document :", error);
+
+        res.status(500).json({
+            error: "Impossible d'extraire le texte du document.",
+            details: error.message
+        });
+    }
 });
 
