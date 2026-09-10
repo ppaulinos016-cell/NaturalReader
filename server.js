@@ -209,8 +209,9 @@ app.post("/api/tts-microsoft", async (req, res) => {
             outputFormat: "audio-24khz-48kbitrate-mono-mp3",
             rate,
             pitch: "default",
-            volume: "default"
-        });
+            volume: "default",
+            timeout: 120000
+        });;
 
         await tts.ttsPromise(text.trim(), outputPath);
 
@@ -530,6 +531,9 @@ app.post("/api/extract-document", upload.single("file"), async (req, res) => {
         });
     }
 });
+
+
+
 
 
 
