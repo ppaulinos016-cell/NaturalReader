@@ -83,7 +83,7 @@ function getMotionFilter(action, index) {
         Math.abs(Number(index || 0)) % 6;
 
     const base =
-        "scale=${VIDEO_RENDER_WIDTH}:${VIDEO_RENDER_HEIGHT}:force_original_aspect_ratio=increase,crop=${VIDEO_RENDER_WIDTH}:${VIDEO_RENDER_HEIGHT}";
+        `scale=${VIDEO_RENDER_WIDTH}:${VIDEO_RENDER_HEIGHT}:force_original_aspect_ratio=increase,crop=${VIDEO_RENDER_WIDTH}:${VIDEO_RENDER_HEIGHT}`;
 
     const motions = {
         walking: [
@@ -477,7 +477,7 @@ Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,
                 "-f",
                 "lavfi",
                 "-i",
-                "color=c=0x07111f:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:r=${VIDEO_RENDER_FPS}",
+                `color=c=0x07111f:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:r=${VIDEO_RENDER_FPS}`,
                 "-f",
                 "lavfi",
                 "-i",
@@ -888,6 +888,7 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
 
 
 
