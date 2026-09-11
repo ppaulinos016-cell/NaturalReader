@@ -20,6 +20,25 @@ const { findAndDownloadImage } =
     require("./image-search");
 
 const execFileAsync = promisify(execFile);
+async function createFallbackSceneImage(outputPath) {
+    await execFileAsync(
+        ffmpegPath,
+        [
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            `color=c=0x07111f:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}`,
+            "-frames:v",
+            "1",
+            outputPath
+        ],
+        {
+            windowsHide: true
+        }
+    );
+}
+
 
 const VOICES = {
     "Microsoft Denise Online (Natural)": "fr-FR-DeniseNeural",
@@ -636,8 +655,8 @@ async function buildReel({
             mode
         );
 
-    const scenes =
-        analysis?.scenes || [];
+    const allScenes = analysis?.scenes || [];
+    const scenes = allScenes.slice(0, 8);
 
     if (!scenes.length) {
         throw new Error(
@@ -714,45 +733,58 @@ async function buildReel({
 
             let imageResult;
 
-            try {
-                imageResult =
-                    await findAndDownloadImage(
-                        scene,
-                        index
+            if (successfulImages.length) {
+                imageResult = successfulImages[0];
+
+                console.warn(
+                    `Réutilisation de la même image pour la scène ${index + 1}.`
+                );
+            } else {
+                try {
+                    imageResult =
+                        await findAndDownloadImage(
+                            scene,
+                            index
+                        );
+
+                    if (imageResult?.localPath) {
+                        successfulImages.push(
+                            imageResult
+                        );
+                    }
+                } catch (imageError) {
+                    console.warn(
+                        `Image indisponible pour la scène ${index + 1}: ${imageError.message}`
                     );
 
-                if (
-                    imageResult?.localPath
-                ) {
+                    const fallbackImagePath =
+                        path.join(
+                            tempRoot,
+                            `fallback-scene-${String(index).padStart(3, "0")}.png`
+                        );
+
+                    await createFallbackSceneImage(
+                        fallbackImagePath
+                    );
+
+                    imageResult = {
+                        localPath: fallbackImagePath,
+                        sceneSignature: {
+                            fallback: true,
+                            scene:
+                                scene?.narration || ""
+                        }
+                    };
+
                     successfulImages.push(
                         imageResult
                     );
-                }
-            } catch (imageError) {
-                console.warn(
-                    `Image indisponible pour la scène ${index + 1}: ${imageError.message}`
-                );
-
-                if (
-                    index > 0 &&
-                    successfulImages.length
-                ) {
-                    imageResult =
-                        successfulImages[
-                            (index - 1) %
-                                successfulImages.length
-                        ];
 
                     console.warn(
-                        `Réutilisation d'une image déjà trouvée pour la scène ${index + 1}.`
-                    );
-                } else {
-                    throw new Error(
-                        `Aucune image de recherche disponible pour la première scène. ${imageError.message}`
+                        `Image de secours générée pour la première scène.`
                     );
                 }
             }
-
             const audioPath =
                 path.join(
                     tempRoot,
@@ -888,6 +920,11 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
+
+
+
+
 
 
 
