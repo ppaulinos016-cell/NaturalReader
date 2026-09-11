@@ -7,6 +7,11 @@ const { promisify } = require("util");
 
 const { EdgeTTS } = require("node-edge-tts");
 const ffmpegPath = require("ffmpeg-static");
+const VIDEO_RENDER_WIDTH = process.platform === "linux" ? 1280 : 1920;
+const VIDEO_RENDER_HEIGHT = process.platform === "linux" ? 720 : 1080;
+const VIDEO_RENDER_FPS = process.platform === "linux" ? 24 : 30;
+const VIDEO_RENDER_PRESET = process.platform === "linux" ? "veryfast" : "medium";
+const VIDEO_RENDER_CRF = process.platform === "linux" ? "23" : "18";
 
 const { analyzeText } =
     require("./scene-analyzer");
@@ -78,54 +83,54 @@ function getMotionFilter(action, index) {
         Math.abs(Number(index || 0)) % 6;
 
     const base =
-        "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080";
+        "scale=${VIDEO_RENDER_WIDTH}:${VIDEO_RENDER_HEIGHT}:force_original_aspect_ratio=increase,crop=${VIDEO_RENDER_WIDTH}:${VIDEO_RENDER_HEIGHT}";
 
     const motions = {
         walking: [
-            `${base},zoompan=z='min(zoom+0.00055,1.10)':x='if(eq(on,1),0,min(x+0.65,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='min(zoom+0.00045,1.08)':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),0,max(y-0.35,0))':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='min(zoom+0.00055,1.10)':x='if(eq(on,1),0,min(x+0.65,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='min(zoom+0.00045,1.08)':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),0,max(y-0.35,0))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         running: [
-            `${base},zoompan=z='min(zoom+0.0009,1.13)':x='if(eq(on,1),0,min(x+1.2,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='min(zoom+0.0008,1.12)':x='if(eq(on,1),iw-iw/zoom,max(x-1.2,0))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='min(zoom+0.0009,1.13)':x='if(eq(on,1),0,min(x+1.2,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='min(zoom+0.0008,1.12)':x='if(eq(on,1),iw-iw/zoom,max(x-1.2,0))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         flying: [
-            `${base},zoompan=z='1.05':x='if(eq(on,1),iw/2-(iw/zoom/2),min(x+0.55,iw-iw/zoom))':y='if(eq(on,1),ih/2-(ih/zoom/2),max(y-0.5,0))':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='min(zoom+0.00045,1.09)':x='if(eq(on,1),iw/2-(iw/zoom/2),max(x-0.55,0))':y='if(eq(on,1),ih/2-(ih/zoom/2),min(y+0.5,ih-ih/zoom))':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='1.05':x='if(eq(on,1),iw/2-(iw/zoom/2),min(x+0.55,iw-iw/zoom))':y='if(eq(on,1),ih/2-(ih/zoom/2),max(y-0.5,0))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='min(zoom+0.00045,1.09)':x='if(eq(on,1),iw/2-(iw/zoom/2),max(x-0.55,0))':y='if(eq(on,1),ih/2-(ih/zoom/2),min(y+0.5,ih-ih/zoom))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         driving: [
-            `${base},zoompan=z='min(zoom+0.0007,1.11)':x='if(eq(on,1),0,min(x+1.0,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='1.07':x='if(eq(on,1),iw-iw/zoom,max(x-1.0,0))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='min(zoom+0.0007,1.11)':x='if(eq(on,1),0,min(x+1.0,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='1.07':x='if(eq(on,1),iw-iw/zoom,max(x-1.0,0))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         swimming: [
-            `${base},zoompan=z='1.06':x='if(eq(on,1),0,min(x+0.45,iw-iw/zoom))':y='if(eq(on,1),ih/2-(ih/zoom/2),max(y-0.2,0))':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='min(zoom+0.0004,1.09)':x='if(eq(on,1),iw/2-(iw/zoom/2),max(x-0.45,0))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='1.06':x='if(eq(on,1),0,min(x+0.45,iw-iw/zoom))':y='if(eq(on,1),ih/2-(ih/zoom/2),max(y-0.2,0))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='min(zoom+0.0004,1.09)':x='if(eq(on,1),iw/2-(iw/zoom/2),max(x-0.45,0))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         dancing: [
-            `${base},zoompan=z='1.035+0.015*sin(on/12)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='1.06+0.012*sin(on/10)':x='if(eq(on,1),0,min(x+0.35,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='1.035+0.015*sin(on/12)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='1.06+0.012*sin(on/10)':x='if(eq(on,1),0,min(x+0.35,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         rising: [
-            `${base},zoompan=z='min(zoom+0.0005,1.10)':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),ih/2-(ih/zoom/2),max(y-0.55,0))':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='1.06':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),0,min(y+0.35,ih-ih/zoom))':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='min(zoom+0.0005,1.10)':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),ih/2-(ih/zoom/2),max(y-0.55,0))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='1.06':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),0,min(y+0.35,ih-ih/zoom))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         falling: [
-            `${base},zoompan=z='1.07':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),ih/2-(ih/zoom/2),min(y+0.55,ih-ih/zoom))':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='min(zoom+0.00045,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='1.07':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),ih/2-(ih/zoom/2),min(y+0.55,ih-ih/zoom))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='min(zoom+0.00045,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         speaking: [
-            `${base},zoompan=z='1.04':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='min(zoom+0.0004,1.08)':x='if(eq(on,1),0,min(x+0.35,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='1.04':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='min(zoom+0.0004,1.08)':x='if(eq(on,1),0,min(x+0.35,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         working: [
-            `${base},zoompan=z='1.045+0.010*sin(on/18)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='1.05':x='if(eq(on,1),0,min(x+0.4,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='1.045+0.010*sin(on/18)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='1.05':x='if(eq(on,1),0,min(x+0.4,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ],
         static: [
-            `${base},zoompan=z='1.035+0.012*sin(on/45)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='min(zoom+0.0004,1.08)':x='if(eq(on,1),0,min(x+0.45,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='1.06':x='if(eq(on,1),iw-iw/zoom,max(x-0.45,0))':y='ih/2-(ih/zoom/2)':d=150:s=1920x1080:fps=30`,
-            `${base},zoompan=z='1.055':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),0,min(y+0.35,ih-ih/zoom))':d=150:s=1920x1080:fps=30`
+            `${base},zoompan=z='1.035+0.012*sin(on/45)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='min(zoom+0.0004,1.08)':x='if(eq(on,1),0,min(x+0.45,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='1.06':x='if(eq(on,1),iw-iw/zoom,max(x-0.45,0))':y='ih/2-(ih/zoom/2)':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`,
+            `${base},zoompan=z='1.055':x='iw/2-(iw/zoom/2)':y='if(eq(on,1),0,min(y+0.35,ih-ih/zoom))':d=150:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:fps=${VIDEO_RENDER_FPS}`
         ]
     };
 
@@ -432,8 +437,8 @@ async function renderTitleCard(
 
     const assContent = `[Script Info]
 ScriptType: v4.00+
-PlayResX: 1920
-PlayResY: 1080
+PlayResX: ${VIDEO_RENDER_WIDTH}
+PlayResY: ${VIDEO_RENDER_HEIGHT}
 ScaledBorderAndShadow: yes
 
 [V4+ Styles]
@@ -472,7 +477,7 @@ Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,
                 "-f",
                 "lavfi",
                 "-i",
-                "color=c=0x07111f:s=1920x1080:r=30",
+                "color=c=0x07111f:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:r=${VIDEO_RENDER_FPS}",
                 "-f",
                 "lavfi",
                 "-i",
@@ -568,7 +573,7 @@ async function assembleSceneVideos(
                 "-i",
                 concatFile,
                 "-vf",
-                "scale=1920:1080,setsar=1,setdar=16/9",
+                `scale=${VIDEO_RENDER_WIDTH}:${VIDEO_RENDER_HEIGHT},setsar=1,setdar=16/9`,
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -883,6 +888,9 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
+
+
 
 
 
