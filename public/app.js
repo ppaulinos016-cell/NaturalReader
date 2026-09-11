@@ -133,8 +133,9 @@ function detectLanguage() {
             .length;
     }
 
-    const detected = Object.keys(scores)
-        .sort((a, b) => scores[b] - scores[a])[0];
+    const detected =
+        Object.keys(scores)
+            .sort((a, b) => scores[b] - scores[a])[0];
 
     if (scores[detected] === 0) {
         readingStatus.textContent =
@@ -169,20 +170,44 @@ function loadVoices() {
         "de-DE": [
             "Microsoft Seraphina Mehrsprachig Online (Natural)",
             "Microsoft Conrad Online (Natural)"
-        ]
+        ],
+        "ee-TG": ["Éwé — MMS-TTS"]
     };
 
-    const selectedLanguage = languageSelect.value;
-    const names = allowedVoices[selectedLanguage] || [];
+    const selectedLanguage =
+        languageSelect.value;
 
-    voices = names.map(name => ({ name }));
+    const names =
+        allowedVoices[selectedLanguage] || [];
+
+    voices =
+        names.map(name => ({ name }));
 
     voiceSelect.innerHTML = "";
 
+    if (!voices.length) {
+        const option =
+            document.createElement("option");
+
+        option.value = "";
+        option.textContent =
+            selectedLanguage === "ee-TG"
+                ? "Éwé — voix TTS à intégrer"
+                : "Aucune voix disponible";
+
+        voiceSelect.appendChild(option);
+        updateDownloadButton();
+        return;
+    }
+
     voices.forEach((voice, index) => {
-        const option = document.createElement("option");
+        const option =
+            document.createElement("option");
+
         option.value = index;
-        option.textContent = voice.name;
+        option.textContent =
+            voice.name;
+
         voiceSelect.appendChild(option);
     });
 
@@ -196,14 +221,20 @@ async function speak() {
         return;
     }
 
+    const selectedLanguage = languageSelect.value;
+    const isEwe = selectedLanguage === "ee-TG";
     const index = Number(voiceSelect.value);
 
-    if (Number.isNaN(index) || !voices[index]) {
+    if (!isEwe && (Number.isNaN(index) || !voices[index])) {
         readingStatus.textContent = "⚠️ Sélectionnez une voix.";
         return;
     }
 
-    const selectedVoice = voices[index].name;
+    const selectedVoice =
+        isEwe
+            ? "Éwé TTS"
+            : voices[index].name;
+
     const speed = Number(speedSelect.value);
     const mode = readingMode ? readingMode.value : "normal";
 
@@ -234,22 +265,28 @@ async function speak() {
 
     try {
         const endpoint =
-            mode === "normal"
-                ? "/api/tts-microsoft"
-                : "/api/tts-expressive";
+            isEwe
+                ? "/api/tts-ewe"
+                : mode === "normal"
+                    ? "/api/tts-microsoft"
+                    : "/api/tts-expressive";
 
         const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                text,
-                voiceName: selectedVoice,
-                speed,
-                mode,
-                language: languageSelect.value
-            })
+            body: JSON.stringify(
+                isEwe
+                    ? { text }
+                    : {
+                        text,
+                        voiceName: selectedVoice,
+                        speed,
+                        mode,
+                        language: selectedLanguage
+                    }
+            )
         });
 
         if (!response.ok) {
@@ -685,7 +722,8 @@ async function translateText() {
     const sourceMap = {
         "fr-FR": "fr",
         "en-GB": "en",
-        "de-DE": "de"
+        "de-DE": "de",
+        "ee-TG": "ee"
     };
 
     const source =
@@ -748,7 +786,8 @@ async function translateText() {
         const targetToReaderLanguage = {
             fr: "fr-FR",
             en: "en-GB",
-            de: "de-DE"
+            de: "de-DE",
+            ee: "ee-TG"
         };
 
         if (targetToReaderLanguage[target]) {
@@ -1130,4 +1169,11 @@ textInput.addEventListener(
 );
 
 updateTranslationDownloadButtons();
+
+
+
+
+
+
+
 

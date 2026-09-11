@@ -30,3 +30,10 @@ video/backup-*/
 # Android / Capacitor : non nécessaires au déploiement web
 android/
 capacitor.config.json
+.venv/
+outputs/
+test-*.wav
+test-*.mp4
+test-*.svg
+test-*.pdf
+test-ewe-tts.py

@@ -5,6 +5,9 @@ const path = require("path");
 const fs = require("fs/promises");
 const os = require("os");
 const crypto = require("crypto");
+const { execFile } = require("child_process");
+const { promisify } = require("util");
+const execFileAsync = promisify(execFile);
 const PDFDocument = require("pdfkit");
 const googleTranslate = require("googletrans").default;
 const { EdgeTTS } = require("node-edge-tts");
@@ -247,8 +250,105 @@ app.post("/api/tts-microsoft", async (req, res) => {
     }
 });
 
+
+app.post("/api/tts-ewe", async (req, res) => {
+    let outputPath = null;
+
+    try {
+        const {
+            text
+        } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({
+                error: "Le texte est vide."
+            });
+        }
+
+        const filename =
+            `naturalreader-ewe-${crypto.randomUUID()}.wav`;
+
+        outputPath =
+            path.join(
+                os.tmpdir(),
+                filename
+            );
+
+        const pythonPath =
+            path.join(
+                __dirname,
+                ".venv",
+                "Scripts",
+                "python.exe"
+            );
+
+        const scriptPath =
+            path.join(
+                __dirname,
+                "ewe-tts.py"
+            );
+
+        await execFileAsync(
+            pythonPath,
+            [
+                scriptPath,
+                text.trim(),
+                outputPath
+            ],
+            {
+                windowsHide: true,
+                timeout: 180000,
+                maxBuffer: 1024 * 1024
+            }
+        );
+
+        const audioBuffer =
+            await fs.readFile(
+                outputPath
+            );
+
+        if (!audioBuffer.length) {
+            throw new Error(
+                "Le fichier audio Éwé est vide."
+            );
+        }
+
+        res.set({
+            "Content-Type": "audio/wav",
+            "Content-Length": audioBuffer.length,
+            "Content-Disposition":
+                'attachment; filename="NaturalReader-ewe.wav"',
+            "Cache-Control": "no-cache"
+        });
+
+        res.send(audioBuffer);
+
+    } catch (error) {
+        console.error(
+            "Erreur TTS Éwé :",
+            error
+        );
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                error:
+                    "Impossible de générer la voix Éwé.",
+                details:
+                    error.message
+            });
+        }
+
+    } finally {
+        if (outputPath) {
+            await fs.unlink(
+                outputPath
+            ).catch(() => {});
+        }
+    }
+});
 registerExpressiveTTS(app, { findMicrosoftVoice, convertSpeedToRate });
 registerVideoEngine(app);
+
 
 
 app.post("/api/generate-reel", async (req, res) => {
@@ -337,14 +437,14 @@ app.post("/api/translate", async (req, res) => {
             });
         }
 
-        if (!["fr", "en", "de"].includes(targetLanguage)) {
+        if (!["fr", "en", "de", "ee"].includes(targetLanguage)) {
             return res.status(400).json({
                 error: "Langue de traduction invalide."
             });
         }
 
         const source =
-            ["fr", "en", "de"].includes(sourceLanguage)
+            ["fr", "en", "de", "ee"].includes(sourceLanguage)
                 ? sourceLanguage
                 : "auto";
 
@@ -708,6 +808,14 @@ app.post("/api/extract-document", upload.single("file"), async (req, res) => {
         });
     }
 });
+
+
+
+
+
+
+
+
 
 
 

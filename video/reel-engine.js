@@ -656,7 +656,7 @@ async function buildReel({
         );
 
     const allScenes = analysis?.scenes || [];
-    const scenes = allScenes.slice(0, 8);
+    const scenes = allScenes.slice(0, 4);
 
     if (!scenes.length) {
         throw new Error(
@@ -920,6 +920,7 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
 
 
 
