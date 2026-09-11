@@ -37,3 +37,5 @@ test-*.mp4
 test-*.svg
 test-*.pdf
 test-ewe-tts.py
+__pycache__/
+*.pyc

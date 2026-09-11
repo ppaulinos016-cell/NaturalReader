@@ -21,6 +21,14 @@ const { findAndDownloadImage } =
 
 const execFileAsync = promisify(execFile);
 async function createFallbackSceneImage(outputPath) {
+    const fallbackFilter =
+        `color=c=0x07111f:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}` +
+        ",drawtext=text='NATURAL READER':" +
+        "fontcolor=white:" +
+        "fontsize=72:" +
+        "x=(w-text_w)/2:" +
+        "y=(h-text_h)/2";
+
     await execFileAsync(
         ffmpegPath,
         [
@@ -28,7 +36,7 @@ async function createFallbackSceneImage(outputPath) {
             "-f",
             "lavfi",
             "-i",
-            `color=c=0x07111f:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}`,
+            fallbackFilter,
             "-frames:v",
             "1",
             outputPath
@@ -38,8 +46,6 @@ async function createFallbackSceneImage(outputPath) {
         }
     );
 }
-
-
 const VOICES = {
     "Microsoft Denise Online (Natural)": "fr-FR-DeniseNeural",
     "Microsoft Eloise Online (Natural)": "fr-FR-EloiseNeural",
@@ -167,8 +173,51 @@ async function generateSceneAudio(
     voiceId,
     rate,
     pitch,
-    outputPath
+    outputPath,
+    isEwe = false
 ) {
+    if (isEwe) {
+        const eweTtsUrl =
+            process.env.EWE_TTS_URL ||
+            "http://127.0.0.1:8001/tts";
+
+        const response =
+            await fetch(
+                eweTtsUrl,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        text: text.trim()
+                    })
+                }
+            );
+
+        if (!response.ok) {
+            const details =
+                await response.text();
+
+            throw new Error(
+                `Service TTS Éwé indisponible: ${details}`
+            );
+        }
+
+        const buffer =
+            Buffer.from(
+                await response.arrayBuffer()
+            );
+
+        await fs.writeFile(
+            outputPath,
+            buffer
+        );
+
+        return;
+    }
+
     const tts =
         new EdgeTTS({
             voice: voiceId,
@@ -634,12 +683,19 @@ async function buildReel({
     speed = 1,
     mode = "intelligent"
 }) {
-    const voiceId =
-        getVoiceId(
-            voiceName
-        );
+    const isEwe =
+        String(voiceName || "")
+            .toLowerCase()
+            .includes("mms-tts");
 
-    if (!voiceId) {
+    const voiceId =
+        isEwe
+            ? null
+            : getVoiceId(
+                voiceName
+            );
+
+    if (!isEwe && !voiceId) {
         throw new Error(
             "Voix Microsoft non autorisée."
         );
@@ -814,7 +870,8 @@ async function buildReel({
                     effectiveSpeed
                 ),
                 settings.pitch,
-                audioPath
+                audioPath,
+                isEwe
             );
 
             const duration =
@@ -920,6 +977,9 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
+
+
 
 
 
