@@ -411,24 +411,53 @@ async function renderTitleCard(
         }
     );
 
-    const titleText =
-        escapeDrawtextText(
-            title
+    const assPath =
+        path.join(
+            os.tmpdir(),
+            `naturalreader-title-${crypto.randomUUID()}.ass`
         );
+
+    function escapeAssText(value) {
+        return String(value || "")
+            .replace(/\\/g, "\\\\")
+            .replace(/\{/g, "\\{")
+            .replace(/\}/g, "\\}");
+    }
+
+    const titleText =
+        escapeAssText(title);
 
     const subtitleText =
-        escapeDrawtextText(
-            subtitle
-        );
+        escapeAssText(subtitle);
+
+    const assContent = `[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Title,Arial,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,3,0,5,40,40,0,1
+Style: Subtitle,Arial,44,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,5,40,40,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Title,,0,0,0,,${titleText}
+Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,0,0,,${subtitleText}
+`;
+
+    await fs.writeFile(
+        assPath,
+        assContent,
+        "utf8"
+    );
+
+    const subtitleFilterPath =
+        assPath.replace(/\\/g, "/").replace(/:/g, "\\:");
 
     const filter =
-        "drawbox=x=0:y=0:w=iw:h=ih:color=#07111f@1:t=fill" +
-        `,drawtext=fontfile='':text='${titleText}'` +
-        ":fontcolor=white:fontsize=86:borderw=3:bordercolor=black" +
-        ":x=(w-text_w)/2:y=(h-text_h)*0.40" +
-        `,drawtext=fontfile='':text='${subtitleText}'` +
-        ":fontcolor=white:fontsize=44:borderw=2:bordercolor=black" +
-        ":x=(w-text_w)/2:y=(h-text_h)*0.56" +
+        `subtitles='${subtitleFilterPath}'` +
         ",fade=t=in:st=0:d=0.35" +
         `,fade=t=out:st=${Math.max(
             0.4,
@@ -494,9 +523,12 @@ async function renderTitleCard(
         throw new Error(
             `Carte vidéo impossible à créer. ${details}`
         );
+    } finally {
+        await fs.unlink(
+            assPath
+        ).catch(() => {});
     }
 }
-
 async function assembleSceneVideos(
     sceneFiles,
     outputPath
@@ -851,6 +883,7 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
 
 
 
