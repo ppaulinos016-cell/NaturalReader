@@ -252,12 +252,8 @@ app.post("/api/tts-microsoft", async (req, res) => {
 
 
 app.post("/api/tts-ewe", async (req, res) => {
-    let outputPath = null;
-
     try {
-        const {
-            text
-        } = req.body;
+        const { text } = req.body;
 
         if (!text || !text.trim()) {
             return res.status(400).json({
@@ -265,53 +261,40 @@ app.post("/api/tts-ewe", async (req, res) => {
             });
         }
 
-        const filename =
-            `naturalreader-ewe-${crypto.randomUUID()}.wav`;
+        const eweTtsUrl =
+            process.env.EWE_TTS_URL ||
+            "http://127.0.0.1:8001/tts";
 
-        outputPath =
-            path.join(
-                os.tmpdir(),
-                filename
+        const response =
+            await fetch(
+                eweTtsUrl,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        text: text.trim()
+                    })
+                }
             );
 
-        const pythonPath =
-            path.join(
-                __dirname,
-                ".venv",
-                "Scripts",
-                "python.exe"
-            );
+        if (!response.ok) {
+            const details =
+                await response.text();
 
-        const scriptPath =
-            path.join(
-                __dirname,
-                "ewe-tts.py"
-            );
-
-        await execFileAsync(
-            pythonPath,
-            [
-                scriptPath,
-                text.trim(),
-                outputPath
-            ],
-            {
-                windowsHide: true,
-                timeout: 180000,
-                maxBuffer: 1024 * 1024
-            }
-        );
+            return res.status(502).json({
+                error:
+                    "Le service TTS Éwé a retourné une erreur.",
+                details
+            });
+        }
 
         const audioBuffer =
-            await fs.readFile(
-                outputPath
+            Buffer.from(
+                await response.arrayBuffer()
             );
-
-        if (!audioBuffer.length) {
-            throw new Error(
-                "Le fichier audio Éwé est vide."
-            );
-        }
 
         res.set({
             "Content-Type": "audio/wav",
@@ -325,24 +308,17 @@ app.post("/api/tts-ewe", async (req, res) => {
 
     } catch (error) {
         console.error(
-            "Erreur TTS Éwé :",
+            "Erreur relais TTS Éwé :",
             error
         );
 
         if (!res.headersSent) {
             res.status(500).json({
                 error:
-                    "Impossible de générer la voix Éwé.",
+                    "Impossible de contacter le service TTS Éwé.",
                 details:
                     error.message
             });
-        }
-
-    } finally {
-        if (outputPath) {
-            await fs.unlink(
-                outputPath
-            ).catch(() => {});
         }
     }
 });
@@ -808,6 +784,8 @@ app.post("/api/extract-document", upload.single("file"), async (req, res) => {
         });
     }
 });
+
+
 
 
 
