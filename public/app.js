@@ -685,7 +685,8 @@ async function translateText() {
     const sourceMap = {
         "fr-FR": "fr",
         "en-GB": "en",
-        "de-DE": "de"
+        "de-DE": "de",
+        "ee-TG": "ee"
     };
 
     const source =
@@ -748,7 +749,8 @@ async function translateText() {
         const targetToReaderLanguage = {
             fr: "fr-FR",
             en: "en-GB",
-            de: "de-DE"
+            de: "de-DE",
+        ee: "ee-TG"
         };
 
         if (targetToReaderLanguage[target]) {
@@ -1130,4 +1132,6 @@ textInput.addEventListener(
 );
 
 updateTranslationDownloadButtons();
+
+
 

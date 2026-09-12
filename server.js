@@ -337,14 +337,14 @@ app.post("/api/translate", async (req, res) => {
             });
         }
 
-        if (!["fr", "en", "de"].includes(targetLanguage)) {
+        if (!["fr", "en", "de", "ee"].includes(targetLanguage)) {
             return res.status(400).json({
                 error: "Langue de traduction invalide."
             });
         }
 
         const source =
-            ["fr", "en", "de"].includes(sourceLanguage)
+            ["fr", "en", "de", "ee"].includes(sourceLanguage)
                 ? sourceLanguage
                 : "auto";
 
@@ -708,6 +708,7 @@ app.post("/api/extract-document", upload.single("file"), async (req, res) => {
         });
     }
 });
+
 
 
 
