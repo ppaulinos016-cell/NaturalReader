@@ -30,3 +30,37 @@ video/backup-*/
 # Android / Capacitor : non nécessaires au déploiement web
 android/
 capacitor.config.json
+
+# Environnement Python local
+.venv/
+ewe-service/__pycache__/
+__pycache__/
+
+# Données et sorties locales
+outputs/
+*.wav
+test-*
+
+# Sauvegardes vidéo locales
+video/backups/
+video/output/
+
+# Prototypes vidéo locaux non nécessaires au dépôt
+video/character-frame-test.js
+video/detailed-character-test.js
+video/hand-posture-test.js
+video/hand-posture-test-v2.js
+video/real-hand-test.js
+video/walk-poses-test.js
+video/walk-poses-hands.js
+video/walk-poses-hands-v2.js
+video/walk-poses-hands-fixed.js
+
+# Fichiers JSON de test locaux
+test-ewe-request.json
+
+
+# Python local
+ewe-service/__pycache__/
+ewe-service/*.pyc
+ewe-service/*.backup-*

@@ -25,6 +25,7 @@
     "node-edge-tts": "^1.2.10",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.20.2",
+    "sharp": "^0.35.4",
     "tesseract.js": "^7.0.0"
   }
 }

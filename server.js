@@ -351,7 +351,8 @@ app.post("/api/generate-reel", async (req, res) => {
             text: text.trim(),
             voiceName,
             speed,
-            mode
+            mode,
+            language
         });
 
         const videoBuffer =
@@ -368,7 +369,7 @@ app.post("/api/generate-reel", async (req, res) => {
             "X-NaturalReader-Scenes":
                 String(result.sceneCount),
             "X-NaturalReader-Voice":
-                voiceName,
+                encodeURIComponent(voiceName),
             "X-NaturalReader-Mode":
                 mode,
         });
@@ -778,6 +779,9 @@ app.post("/api/extract-document", upload.single("file"), async (req, res) => {
         });
     }
 });
+
+
+
 
 
 

@@ -162,6 +162,40 @@ function getMotionFilter(action, index) {
     ];
 }
 
+async function generateEweSceneAudio(
+    text,
+    outputPath
+) {
+    const response = await fetch(
+        process.env.EWE_TTS_URL ||
+        "http://127.0.0.1:8001/tts",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8"
+            },
+            body: JSON.stringify({
+                text
+            })
+        }
+    );
+
+    if (!response.ok) {
+        const details = await response.text().catch(() => "");
+        throw new Error(
+            `Service TTS Éwé indisponible (${response.status}). ${details}`
+        );
+    }
+
+    const audioBuffer = Buffer.from(
+        await response.arrayBuffer()
+    );
+
+    await fs.writeFile(
+        outputPath,
+        audioBuffer
+    );
+}
 async function generateSceneAudio(
     text,
     voiceId,
@@ -426,7 +460,8 @@ async function renderTitleCard(
     outputPath,
     title,
     subtitle,
-    duration = 2
+    duration = 2,
+    soundType = "intro"
 ) {
     await fs.mkdir(
         path.dirname(outputPath),
@@ -451,9 +486,6 @@ async function renderTitleCard(
     const titleText =
         escapeAssText(title);
 
-    const subtitleText =
-        escapeAssText(subtitle);
-
     const assContent = `[Script Info]
 ScriptType: v4.00+
 PlayResX: ${VIDEO_RENDER_WIDTH}
@@ -462,13 +494,11 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Title,Arial,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,3,0,5,40,40,0,1
-Style: Subtitle,Arial,44,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,5,40,40,0,1
+Style: Brand,Arial,92,${soundType === "outro" ? "&H0000D7FF" : "&H00FFFFFF"},${soundType === "outro" ? "&H0000D7FF" : "&H00FFFFFF"},${soundType === "outro" ? "&H0000A5FF" : "&H001A5CFF"},&H00000000,-1,0,0,0,100,100,3,0,1,3,8,5,40,40,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Title,,0,0,0,,${titleText}
-Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,0,0,,${subtitleText}
+Dialogue: 0,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Brand,,0,0,0,,{\\fad(550,550)\\fscx(70)\\fscy(70)\\alpha&H35&\\t(0,850,\\fscx(100)\\fscy(100)\\alpha&H00&)\\t(850,1450,\\fsp(5))}${titleText}
 `;
 
     await fs.writeFile(
@@ -482,11 +512,11 @@ Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,
 
     const filter =
         `subtitles='${subtitleFilterPath}'` +
-        ",fade=t=in:st=0:d=0.35" +
+        ",fade=t=in:st=0:d=0.2" +
         `,fade=t=out:st=${Math.max(
-            0.4,
-            duration - 0.35
-        )}:d=0.35`;
+            0.45,
+            duration - 0.45
+        )}:d=0.45`;
 
     try {
         await execFileAsync(
@@ -496,11 +526,11 @@ Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,
                 "-f",
                 "lavfi",
                 "-i",
-                `color=c=0x07111f:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:r=${VIDEO_RENDER_FPS}`,
+                `color=c=0x050914:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:r=${VIDEO_RENDER_FPS}`,
                 "-f",
                 "lavfi",
                 "-i",
-                "anullsrc=channel_layout=mono:sample_rate=24000",
+                soundType === "outro" ? "sine=frequency=392:duration=0.9,afade=t=in:st=0:d=0.05,afade=t=out:st=0.65:d=0.25,volume=0.12" : "sine=frequency=523.25:duration=0.9,afade=t=in:st=0:d=0.05,afade=t=out:st=0.65:d=0.25,volume=0.12",
                 "-t",
                 String(duration),
                 "-vf",
@@ -512,13 +542,13 @@ Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,
                 "-c:v",
                 "libx264",
                 "-preset",
-                "medium",
+                VIDEO_RENDER_PRESET,
                 "-crf",
-                "18",
+                VIDEO_RENDER_CRF,
                 "-pix_fmt",
                 "yuv420p",
                 "-r",
-                "30",
+                String(VIDEO_RENDER_FPS),
                 "-aspect",
                 "16:9",
                 "-c:a",
@@ -552,8 +582,7 @@ Dialogue: 1,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Subtitle,,0,
             assPath
         ).catch(() => {});
     }
-}
-async function assembleSceneVideos(
+}async function assembleSceneVideos(
     sceneFiles,
     outputPath
 ) {
@@ -632,14 +661,14 @@ async function buildReel({
     text,
     voiceName,
     speed = 1,
-    mode = "intelligent"
+    mode = "intelligent",
+    language = "fr-FR"
 }) {
-    const voiceId =
-        getVoiceId(
-            voiceName
-        );
+    const isEwe = language === "ee-TG";
 
-    if (!voiceId) {
+    const voiceId = isEwe ? null : getVoiceId(voiceName);
+
+    if (!isEwe && !voiceId) {
         throw new Error(
             "Voix Microsoft non autorisée."
         );
@@ -701,7 +730,7 @@ async function buildReel({
         await renderTitleCard(
             introPath,
             "NATURAL READER",
-            "Lecteur vocal naturel",
+            "",
             2
         );
 
@@ -788,7 +817,7 @@ async function buildReel({
             const audioPath =
                 path.join(
                     tempRoot,
-                    `audio-${String(index).padStart(3, "0")}.mp3`
+                    `audio-${String(index).padStart(3, "0")}.${isEwe ? "wav" : "mp3"}`
                 );
 
             const videoPath =
@@ -806,16 +835,22 @@ async function buildReel({
                             settings.rate
                     )
                 );
-
-            await generateSceneAudio(
-                scene.narration,
-                voiceId,
-                convertSpeedToRate(
-                    effectiveSpeed
-                ),
-                settings.pitch,
-                audioPath
-            );
+            if (isEwe) {
+                await generateEweSceneAudio(
+                    scene.narration,
+                    audioPath
+                );
+            } else {
+                await generateSceneAudio(
+                    scene.narration,
+                    voiceId,
+                    convertSpeedToRate(
+                        effectiveSpeed
+                    ),
+                    settings.pitch,
+                    audioPath
+                );
+            }
 
             const duration =
                 await getAudioDuration(
@@ -863,7 +898,7 @@ async function buildReel({
         await renderTitleCard(
             outroPath,
             "Appréciation",
-            "par Natural Reader",
+            "",
             2
         );
 
@@ -920,6 +955,19 @@ async function buildReel({
 module.exports = {
     buildReel
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,182 +1,64 @@
-﻿const ACTION_PATTERNS = [
-    {
-        action: "walking",
-        words: [
-            "walk", "walks", "walking",
-            "marche", "marcher", "marche",
-            "geht", "gehen", "läuft", "laufen"
-        ]
-    },
-    {
-        action: "running",
-        words: [
-            "run", "runs", "running",
-            "court", "courir", "cours",
-            "rennt", "rennen", "läuft"
-        ]
-    },
-    {
-        action: "flying",
-        words: [
-            "fly", "flies", "flying",
-            "vole", "volent", "voler",
-            "fliegt", "fliegen"
-        ]
-    },
-    {
-        action: "driving",
-        words: [
-            "drive", "drives", "driving",
-            "conduit", "conduire",
-            "fährt", "fahren"
-        ]
-    },
-    {
-        action: "rising",
-        words: [
-            "rise", "rises", "rising",
-            "se lève", "lever",
-            "steigt", "aufgehen"
-        ]
-    },
-    {
-        action: "falling",
-        words: [
-            "fall", "falls", "falling",
-            "tombe", "tomber",
-            "fällt", "fallen"
-        ]
-    },
-    {
-        action: "speaking",
-        words: [
-            "speak", "speaks", "speaking",
-            "talk", "talks", "talking",
-            "parle", "parler",
-            "spricht", "sprechen"
-        ]
-    },
-    {
-        action: "dancing",
-        words: [
-            "dance", "dances", "dancing",
-            "danse", "danser",
-            "tanzt", "tanzen"
-        ]
-    },
-    {
-        action: "swimming",
-        words: [
-            "swim", "swims", "swimming",
-            "nage", "nager",
-            "schwimmt", "schwimmen"
-        ]
-    },
-    {
-        action: "working",
-        words: [
-            "work", "works", "working",
-            "travaille", "travailler",
-            "arbeitet", "arbeiten"
-        ]
-    }
+﻿const ACTION_WORDS = [
+    "marche","marcher","découvre","découvrir","souffle","souffler",
+    "se couche","se coucher","court","courir","vole","voler","nage","nager",
+    "grimpe","grimper","tombe","tomber","fuit","fuir","cherche","chercher",
+    "regarde","regarder","voit","voir","rencontre","rencontrer",
+    "parle","parler","dit","dire","écoute","écouter","ouvre","ouvrir",
+    "ferme","fermer","prend","prendre","porte","porter","pose","poser",
+    "entre","entrer","sort","sortir","avance","avancer","recule","reculer",
+    "travaille","travailler","danse","danser","chante","chanter",
+    "pleure","pleurer","rit","rire","sourit","sourire","crie","crier",
+    "écrit","écrire","lit","lire","mange","manger","boit","boire"
 ];
 
-const SUBJECT_PATTERNS = [
-    {
-        subject: "person",
-        words: [
-            "person", "man", "woman",
-            "boy", "girl", "child",
-            "people", "human",
-            "homme", "femme", "enfant",
-            "personne", "gens",
-            "mann", "frau", "kind", "menschen"
-        ]
-    },
-    {
-        subject: "birds",
-        words: [
-            "bird", "birds",
-            "oiseau", "oiseaux",
-            "vogel", "vögel"
-        ]
-    },
-    {
-        subject: "car",
-        words: [
-            "car", "cars", "vehicle",
-            "voiture", "véhicule",
-            "auto", "fahrzeug"
-        ]
-    },
-    {
-        subject: "ocean",
-        words: [
-            "ocean", "sea", "water",
-            "mer", "océan", "eau",
-            "meer", "ozean", "wasser"
-        ]
-    },
-    {
-        subject: "forest",
-        words: [
-            "forest", "woods", "tree", "trees",
-            "forêt", "bois", "arbre", "arbres",
-            "wald", "baum", "bäume"
-        ]
-    },
-    {
-        subject: "sun",
-        words: [
-            "sun", "sunrise", "sunset",
-            "soleil", "lever", "coucher",
-            "sonne", "sonnenaufgang", "sonnenuntergang"
-        ]
-    }
+const SUBJECT_WORDS = [
+    "homme","femme","enfant","garçon","fille","personne","personnage",
+    "voyageur","voyageuse","roi","reine","soldat","guerrier","guerrière",
+    "père","mère","ami","amie","oiseau","cheval","chien","chat","animal",
+    "famille","foule","man","woman","child","boy","girl","person",
+    "king","queen","soldier","warrior","bird","horse","dog","cat",
+    "family","people"
 ];
 
-const LOCATION_PATTERNS = [
-    {
-        location: "city",
-        words: [
-            "city", "street", "town",
-            "ville", "rue", "centre",
-            "stadt", "straße"
-        ]
-    },
-    {
-        location: "beach",
-        words: [
-            "beach", "shore", "coast",
-            "plage", "côte", "rivage",
-            "strand", "küste"
-        ]
-    },
-    {
-        location: "forest",
-        words: [
-            "forest", "woods",
-            "forêt", "bois",
-            "wald"
-        ]
-    },
-    {
-        location: "ocean",
-        words: [
-            "ocean", "sea", "river", "lake",
-            "mer", "rivière", "lac",
-            "meer", "fluss", "see"
-        ]
-    },
-    {
-        location: "home",
-        words: [
-            "home", "house", "room",
-            "maison", "maison", "pièce",
-            "haus", "zimmer"
-        ]
-    }
+const LOCATION_WORDS = [
+    "maison","chambre","pièce","village","ville","rue","forêt","bois",
+    "montagne","colline","vallée","rivière","lac","mer","océan","plage",
+    "désert","jardin","champ","ferme","école","église","marché","palais",
+    "château","route","pont","grotte","île","city","street","forest",
+    "mountain","river","lake","sea","ocean","beach","desert","garden",
+    "field","school","market","palace","castle","road","bridge","cave",
+    "island"
+];
+
+const OBJECT_WORDS = [
+    "livre","lettre","clé","épée","bâton","sac","valise","voiture",
+    "bateau","navire","porte","fenêtre","lampe","bougie","table","chaise",
+    "arbre","fleur","feu","téléphone","photo","carte","couronne","trésor",
+    "argent","book","letter","key","sword","stick","bag","car","boat",
+    "ship","door","window","lamp","candle","table","chair","tree",
+    "flower","fire","phone","map","crown","treasure","gold"
+];
+
+const WEATHER_WORDS = [
+    "pluie","pluvieux","orage","tempête","neige","neigeux","vent","venteux",
+    "soleil","ensoleillé","nuage","nuageux","brouillard","brume","éclair",
+    "tonnerre","rain","storm","snow","wind","sun","sunny","cloud","cloudy",
+    "fog","mist","thunder"
+];
+
+const TIME_WORDS = [
+    "matin","aube","midi","après-midi","soir","coucher","nuit","minuit",
+    "crépuscule","jour","hier","aujourd'hui","demain","morning","dawn",
+    "noon","afternoon","evening","sunset","night","midnight","twilight",
+    "day","yesterday","today","tomorrow"
+];
+
+const ERA_WORDS = [
+    "ancien","ancienne","antique","médiéval","médiévale","royaume",
+    "empire","tribu","préhistoire","historique","futur","futuriste",
+    "technologique","moderne","contemporain","ancient","medieval",
+    "kingdom","empire","tribe","prehistoric","historical","future",
+    "futuristic","modern","contemporary"
 ];
 
 function normalize(text) {
@@ -186,207 +68,252 @@ function normalize(text) {
         .replace(/[\u0300-\u036f]/g, "");
 }
 
-function findPattern(text, patterns) {
-    const normalized = normalize(text);
+function unique(values) {
+    return [...new Set(values.filter(Boolean))];
+}
 
-    for (const pattern of patterns) {
-        for (const word of pattern.words) {
-            const candidate = normalize(word);
+function tokenize(text) {
+    return String(text || "")
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
+        .split(/\s+/)
+        .filter(Boolean);
+}
 
-            if (
-                normalized.includes(
-                    candidate
-                )
-            ) {
-                return pattern[
-                    Object.keys(pattern)
-                        .find(key => key !== "words")
-                ];
+function findWords(text, dictionary) {
+    const source = String(text || "").toLowerCase();
+    const tokens = tokenize(text);
+
+    return unique(
+        dictionary.filter(word => {
+            const candidate = String(word).toLowerCase();
+
+            if (candidate.includes(" ")) {
+                return source.includes(candidate);
             }
-        }
+
+            return tokens.includes(candidate);
+        })
+    );
+}
+
+function inferAction(text) {
+    const found = findWords(text, ACTION_WORDS);
+
+    return found.length
+        ? found.slice(0, 3).join(", ")
+        : "natural movement appropriate to the story";
+}
+
+function inferCharacters(text) {
+    const found = findWords(text, SUBJECT_WORDS);
+
+    return found.length
+        ? found.slice(0, 5)
+        : ["fictional story character"];
+}
+
+function inferLocations(text) {
+    const found = findWords(text, LOCATION_WORDS);
+
+    return found.length
+        ? found.slice(0, 4)
+        : ["story-appropriate environment"];
+}
+
+function inferObjects(text) {
+    return findWords(text, OBJECT_WORDS).slice(0, 6);
+}
+
+function inferWeather(text) {
+    const found = findWords(text, WEATHER_WORDS);
+
+    return found.length
+        ? found.slice(0, 3)
+        : ["natural weather consistent with the scene"];
+}
+
+function inferTime(text) {
+    const found = findWords(text, TIME_WORDS);
+
+    return found.length
+        ? found.slice(0, 3)
+        : ["time of day appropriate to the narrative"];
+}
+
+function inferEra(text) {
+    const found = findWords(text, ERA_WORDS);
+
+    return found.length
+        ? found.slice(0, 3)
+        : ["era appropriate to the story"];
+}
+
+function inferAtmosphere(text) {
+    const source = normalize(text);
+
+    if (/peur|danger|menace|attaque|guerre|fear|danger|attack|war/.test(source)) {
+        return "dramatic, tense, mysterious atmosphere";
     }
 
-    return null;
-}
+    if (/joie|heureux|bonheur|rire|fete|happy|joy|laugh|celebration/.test(source)) {
+        return "warm, joyful, lively atmosphere";
+    }
 
-function detectAction(text) {
-    return (
-        findPattern(
-            text,
-            ACTION_PATTERNS
-        ) ||
-        "static"
-    );
-}
+    if (/triste|pleure|mort|solitude|sad|cry|death|alone/.test(source)) {
+        return "quiet, emotional, melancholic atmosphere";
+    }
 
-function detectSubject(text) {
-    return (
-        findPattern(
-            text,
-            SUBJECT_PATTERNS
-        ) ||
-        "scene"
-    );
-}
+    if (/amour|aime|love|tendre|tendresse/.test(source)) {
+        return "gentle, warm, tender atmosphere";
+    }
 
-function detectLocation(text) {
-    return (
-        findPattern(
-            text,
-            LOCATION_PATTERNS
-        ) ||
-        "environment"
-    );
+    if (/mystérieux|mystere|mystery|mysterious/.test(source)) {
+        return "mysterious, magical, cinematic atmosphere";
+    }
+
+    return "natural cinematic atmosphere matching the narrative";
 }
 
 function extractKeywords(text) {
-    return String(text || "")
-        .replace(/[^\p{L}\p{N}\s-]/gu, " ")
-        .split(/\s+/)
-        .map(word => word.trim())
-        .filter(word => word.length >= 4)
-        .slice(0, 8);
+    return unique(
+        String(text || "")
+            .replace(/[^\p{L}\p{N}\s'-]/gu, " ")
+            .split(/\s+/)
+            .map(word => word.trim())
+            .filter(word => word.length >= 4)
+    ).slice(0, 12);
 }
 
-function buildVisualPrompt(
-    text,
-    subject,
-    location,
-    action
-) {
-    const actionDescriptions = {
-        walking:
-            "walking naturally, candid movement",
-        running:
-            "running with visible motion",
-        flying:
-            "flying through the air",
-        driving:
-            "driving naturally",
-        rising:
-            "rising into the sky",
-        falling:
-            "falling through the air",
-        speaking:
-            "speaking naturally",
-        dancing:
-            "dancing with movement",
-        swimming:
-            "swimming through water",
-        working:
-            "working naturally",
-        static:
-            "natural scene with subtle environmental movement"
-    };
-
-    const movement =
-        actionDescriptions[action] ||
-        actionDescriptions.static;
-
+function buildVisualPrompt(data) {
     return [
-        text,
-        `subject: ${subject}`,
-        `location: ${location}`,
-        `action: ${movement}`,
-        "realistic photography",
+        data.narration,
+        `fictional characters: ${data.characters.join(", ")}`,
+        `environment: ${data.locations.join(", ")}`,
+        `actions: ${data.actions.join(", ")}`,
+        data.objects.length
+            ? `important objects: ${data.objects.join(", ")}`
+            : "",
+        `weather: ${data.weather.join(", ")}`,
+        `time: ${data.time.join(", ")}`,
+        `era: ${data.era.join(", ")}`,
+        `atmosphere: ${data.atmosphere}`,
+        `story progression: ${data.progression}`,
+        "hand-drawn 2D animated film aesthetic",
+        "Ghibli-inspired Japanese animation aesthetic",
+        "soft painterly backgrounds",
+        "expressive fictional characters",
         "cinematic composition",
-        "natural lighting",
-        "documentary realism"
-    ].join(", ");
-}
-
-function analyzeSentence(
-    sentence,
-    index
-) {
-    const subject =
-        detectSubject(sentence);
-
-    const location =
-        detectLocation(sentence);
-
-    const action =
-        detectAction(sentence);
-
-    const keywords =
-        extractKeywords(sentence);
-
-    return {
-        index,
-        narration: sentence,
-        subject,
-        location,
-        action,
-        keywords,
-        visualPrompt:
-            buildVisualPrompt(
-                sentence,
-                subject,
-                location,
-                action
-            )
-    };
+        "warm detailed lighting",
+        "visible character movement",
+        "visible environmental movement",
+        "cinematic camera movement",
+        "no photorealistic faces",
+        "no real person likeness",
+        "coherent continuity with previous scene"
+    ].filter(Boolean).join(", ");
 }
 
 function splitSentences(text) {
     return String(text || "")
         .replace(/\r\n/g, "\n")
-        .split(
-            /(?<=[.!?…。！？])\s+/
-        )
+        .split(/(?<=[.!?…。！？])\s+/)
         .map(value => value.trim())
         .filter(Boolean);
 }
 
-async function analyzeText(
-    text,
-    mode = "intelligent"
-) {
-    const sentences =
-        splitSentences(text);
+function analyzeSentence(sentence, index, total, previousCharacters = []) {
+    const detectedCharacters = inferCharacters(sentence);
+    const characters =
+        detectedCharacters[0] === "fictional story character" && previousCharacters.length
+            ? previousCharacters
+            : detectedCharacters;
+
+    const locations = inferLocations(sentence);
+    const actions = [inferAction(sentence)];
+    const objects = inferObjects(sentence);
+    const weather = inferWeather(sentence);
+    const time = inferTime(sentence);
+    const era = inferEra(sentence);
+    const atmosphere = inferAtmosphere(sentence);
+
+    let progression = "continuation of the narrative";
+
+    if (index === 0) {
+        progression = "opening of the story";
+    } else if (index === total - 1) {
+        progression = "resolution or closing moment";
+    } else if (index < total / 2) {
+        progression = "development of the story";
+    } else {
+        progression = "escalation or transition toward the conclusion";
+    }
+
+    const data = {
+        index,
+        narration: sentence,
+        characters,
+        locations,
+        actions,
+        objects,
+        weather,
+        time,
+        era,
+        atmosphere,
+        progression
+    };
+
+    return {
+        ...data,
+        subject: characters[0],
+        location: locations[0],
+        action: actions[0],
+        keywords: extractKeywords(sentence),
+        visualPrompt: buildVisualPrompt(data)
+    };
+}
+
+async function analyzeText(text, mode = "intelligent") {
+    const sentences = splitSentences(text);
+    let previousCharacters = [];
+
+    const scenes = sentences.map((sentence, index) => {
+        const scene = analyzeSentence(
+            sentence,
+            index,
+            sentences.length,
+            previousCharacters
+        );
+
+        if (
+            scene.characters.length &&
+            scene.characters[0] !== "fictional story character"
+        ) {
+            previousCharacters = scene.characters;
+        }
+
+        return scene;
+    });
 
     return {
         mode,
-        sceneCount: sentences.length,
-        scenes: sentences.map(
-            (sentence, index) =>
-                analyzeSentence(
-                    sentence,
-                    index
-                )
-        )
+        sceneCount: scenes.length,
+        visualDirection: "animated-narrative",
+        style: "Ghibli-inspired Japanese-animation",
+        scenes
     };
 }
 
 module.exports = {
     analyzeText,
-    detectAction,
-    detectSubject,
-    detectLocation
+    detectAction: inferAction,
+    detectSubject: text => inferCharacters(text)[0],
+    detectLocation: text => inferLocations(text)[0],
+    inferCharacters,
+    inferLocations,
+    inferObjects,
+    inferWeather,
+    inferTime,
+    inferEra,
+    inferAtmosphere
 };
-
-if (require.main === module) {
-    const text =
-        process.argv
-            .slice(2)
-            .join(" ")
-            .trim();
-
-    if (!text) {
-        console.error(
-            "Texte requis."
-        );
-        process.exit(1);
-    }
-
-    analyzeText(text)
-        .then(result => {
-            console.log(
-                JSON.stringify(
-                    result,
-                    null,
-                    2
-                )
-            );
-        });
-}
