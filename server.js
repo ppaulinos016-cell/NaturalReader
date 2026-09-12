@@ -247,6 +247,76 @@ app.post("/api/tts-microsoft", async (req, res) => {
     }
 });
 
+app.post("/api/tts-ewe", async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({
+                error: "Le texte est vide."
+            });
+        }
+
+        const eweTtsUrl =
+            process.env.EWE_TTS_URL ||
+            "http://127.0.0.1:8001/tts";
+
+        const response = await fetch(
+            eweTtsUrl,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+                body: JSON.stringify({
+                    text: text.trim()
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const details =
+                await response.text();
+
+            return res.status(502).json({
+                error:
+                    "Le service TTS Éwé a retourné une erreur.",
+                details
+            });
+        }
+
+        const audioBuffer =
+            Buffer.from(
+                await response.arrayBuffer()
+            );
+
+        res.set({
+            "Content-Type": "audio/wav",
+            "Content-Length": audioBuffer.length,
+            "Content-Disposition":
+                'attachment; filename="NaturalReader-ewe.wav"',
+            "Cache-Control": "no-cache"
+        });
+
+        res.send(audioBuffer);
+
+    } catch (error) {
+        console.error(
+            "Erreur TTS Éwé :",
+            error
+        );
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                error:
+                    "Impossible de générer la voix Éwé.",
+                details:
+                    error.message
+            });
+        }
+    }
+});
 registerExpressiveTTS(app, { findMicrosoftVoice, convertSpeedToRate });
 registerVideoEngine(app);
 
@@ -708,6 +778,7 @@ app.post("/api/extract-document", upload.single("file"), async (req, res) => {
         });
     }
 });
+
 
 
 

@@ -169,6 +169,9 @@ function loadVoices() {
         "de-DE": [
             "Microsoft Seraphina Mehrsprachig Online (Natural)",
             "Microsoft Conrad Online (Natural)"
+        ],
+        "ee-TG": [
+            "Éwé — MMS-TTS"
         ]
     };
 
@@ -196,14 +199,15 @@ async function speak() {
         return;
     }
 
+    const isEwe = languageSelect.value === "ee-TG";
     const index = Number(voiceSelect.value);
 
-    if (Number.isNaN(index) || !voices[index]) {
+    if (!isEwe && (Number.isNaN(index) || !voices[index])) {
         readingStatus.textContent = "⚠️ Sélectionnez une voix.";
         return;
     }
 
-    const selectedVoice = voices[index].name;
+    const selectedVoice = isEwe ? "Éwé — MMS-TTS" : voices[index].name;
     const speed = Number(speedSelect.value);
     const mode = readingMode ? readingMode.value : "normal";
 
@@ -234,22 +238,28 @@ async function speak() {
 
     try {
         const endpoint =
-            mode === "normal"
-                ? "/api/tts-microsoft"
-                : "/api/tts-expressive";
+            isEwe
+                ? "/api/tts-ewe"
+                : mode === "normal"
+                    ? "/api/tts-microsoft"
+                    : "/api/tts-expressive";
 
         const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                text,
-                voiceName: selectedVoice,
-                speed,
-                mode,
-                language: languageSelect.value
-            })
+            body: JSON.stringify(
+                isEwe
+                    ? { text }
+                    : {
+                        text,
+                        voiceName: selectedVoice,
+                        speed,
+                        mode,
+                        language: languageSelect.value
+                    }
+            )
         });
 
         if (!response.ok) {
@@ -378,15 +388,16 @@ async function generateVideo() {
         return;
     }
 
+    const isEwe = languageSelect.value === "ee-TG";
     const index = Number(voiceSelect.value);
 
-    if (Number.isNaN(index) || !voices[index]) {
+    if (!isEwe && (Number.isNaN(index) || !voices[index])) {
         readingStatus.textContent =
             "⚠️ Sélectionnez une voix.";
         return;
     }
 
-    const selectedVoice = voices[index].name;
+    const selectedVoice = isEwe ? "Éwé — MMS-TTS" : voices[index].name;
     const speed = Number(speedSelect.value);
     const mode =
         readingMode ? readingMode.value : "normal";
@@ -1132,6 +1143,8 @@ textInput.addEventListener(
 );
 
 updateTranslationDownloadButtons();
+
+
 
 
 
