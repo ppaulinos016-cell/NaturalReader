@@ -1,4 +1,4 @@
-﻿const textInput = document.getElementById("text");
+const textInput = document.getElementById("text");
 const languageSelect = document.getElementById("language");
 const voiceSelect = document.getElementById("voice");
 const speedSelect = document.getElementById("speed");
@@ -420,7 +420,7 @@ async function generateVideo() {
             : "Normal";
 
     readingStatus.textContent =
-        `🎬 Analyse des scènes et génération du Reel — ${selectedVoice} — ${modeLabel}...`;
+        `🎬 Génération de votre vidéo — ${selectedVoice} — ${modeLabel}...`;
 
     try {
         const response =
@@ -1143,8 +1143,3 @@ textInput.addEventListener(
 );
 
 updateTranslationDownloadButtons();
-
-
-
-
-

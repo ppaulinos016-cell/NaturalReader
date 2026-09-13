@@ -1,4 +1,4 @@
-﻿const fs = require("fs/promises");
+const fs = require("fs/promises");
 const path = require("path");
 const os = require("os");
 const crypto = require("crypto");
@@ -498,7 +498,7 @@ Style: Brand,Arial,92,${soundType === "outro" ? "&H0000D7FF" : "&H00FFFFFF"},${s
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Brand,,0,0,0,,{\\fad(550,550)\\fscx(70)\\fscy(70)\\alpha&H35&\\t(0,850,\\fscx(100)\\fscy(100)\\alpha&H00&)\\t(850,1450,\\fsp(5))}${titleText}
+Dialogue: 0,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Brand,,0,0,0,,{\\fad(350,0)\\fscx(70)\\fscy(70)\\alpha&H35&\\t(0,850,\\fscx(100)\\fscy(100)\\alpha&H00&)\\t(850,1450,\\fsp(5))}${titleText}
 `;
 
     await fs.writeFile(
@@ -530,7 +530,7 @@ Dialogue: 0,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Brand,,0,0,0
                 "-f",
                 "lavfi",
                 "-i",
-                soundType === "outro" ? "sine=frequency=392:duration=0.9,afade=t=in:st=0:d=0.05,afade=t=out:st=0.65:d=0.25,volume=0.12" : "sine=frequency=523.25:duration=0.9,afade=t=in:st=0:d=0.05,afade=t=out:st=0.65:d=0.25,volume=0.12",
+                soundType === "outro" ? "sine=frequency=392:duration=0.9,afade=t=in:st=0:d=0.05,afade=t=out:st=0.65:d=0.25,volume=0.12" : `anullsrc=r=24000:cl=mono:d=${duration}`,
                 "-t",
                 String(duration),
                 "-vf",
@@ -657,6 +657,372 @@ Dialogue: 0,0:00:00.00,0:00:${String(duration).padStart(4, "0")}.00,Brand,,0,0,0
     }
 }
 
+async function renderAnimatedCelestialVideo(
+    audioPath,
+    outputPath,
+    subtitleText
+) {
+    const duration = await getAudioDuration(audioPath);
+
+    const tempDir = path.dirname(audioPath);
+    const subtitlePath = path.join(
+        tempDir,
+        "celestial-subtitles.srt"
+    );
+
+    const normalizedText =
+        String(subtitleText || "")
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .replace(/[ \t]+/g, " ")
+            .replace(/\n+/g, " ")
+            .trim();
+
+    if (!normalizedText) {
+        throw new Error(
+            "Aucun texte à afficher dans les sous-titres."
+        );
+    }
+
+    const sentences =
+        normalizedText
+            .split(/(?<=[.!?;:])\s+/)
+            .map(text => text.trim())
+            .filter(Boolean);
+
+    const chunks = [];
+
+    for (const sentence of sentences) {
+        if (sentence.length <= 120) {
+            chunks.push(sentence);
+            continue;
+        }
+
+        const words = sentence.split(/\s+/);
+        let current = "";
+
+        for (const word of words) {
+            const candidate =
+                current
+                    ? `${current} ${word}`
+                    : word;
+
+            if (
+                candidate.length > 120 &&
+                current
+            ) {
+                chunks.push(current);
+                current = word;
+            } else {
+                current = candidate;
+            }
+        }
+
+        if (current) {
+            chunks.push(current);
+        }
+    }
+
+    if (!chunks.length) {
+        chunks.push(normalizedText);
+    }
+
+    const totalWeight =
+        chunks.reduce(
+            (sum, chunk) =>
+                sum + Math.max(chunk.length, 1),
+            0
+        );
+
+    let currentTime = 0;
+
+    const formatSrtTime = seconds => {
+        const totalMs =
+            Math.max(
+                0,
+                Math.round(seconds * 1000)
+            );
+
+        const hours =
+            Math.floor(
+                totalMs / 3600000
+            );
+
+        const minutes =
+            Math.floor(
+                (totalMs % 3600000) / 60000
+            );
+
+        const secs =
+            Math.floor(
+                (totalMs % 60000) / 1000
+            );
+
+        const ms =
+            totalMs % 1000;
+
+        return [
+            String(hours).padStart(2, "0"),
+            String(minutes).padStart(2, "0"),
+            String(secs).padStart(2, "0")
+        ].join(":") +
+            "," +
+            String(ms).padStart(3, "0");
+    };
+
+    const srtBlocks =
+        chunks.map((chunk, index) => {
+            const chunkDuration =
+                duration *
+                (
+                    Math.max(
+                        chunk.length,
+                        1
+                    ) / totalWeight
+                );
+
+            const startTime =
+                currentTime;
+
+            const endTime =
+                index === chunks.length - 1
+                    ? duration
+                    : Math.min(
+                        duration,
+                        currentTime +
+                            chunkDuration
+                    );
+
+            currentTime =
+                endTime;
+
+            return [
+                String(index + 1),
+                `${formatSrtTime(startTime)} --> ${formatSrtTime(endTime)}`,
+                chunk,
+                ""
+            ].join("\n");
+        });
+
+    await fs.writeFile(
+        subtitlePath,
+        srtBlocks.join("\n"),
+        "utf8"
+    );
+
+    const subtitleFile =
+        subtitlePath
+            .replace(/\\/g, "/")
+            .replace(/:/g, "\\:");
+
+    const celestialFilter = [
+        "drawbox=x=0:y=0:w=iw:h=ih:color=0x24133F@1:t=fill",
+
+        "eq=contrast=1.04:saturation=1.08",
+
+        `subtitles='${subtitleFile}'`,
+
+        "format=yuv420p"
+    ].join(",");
+
+    try {
+        await execFileAsync(
+            ffmpegPath,
+            [
+                "-y",
+                "-f",
+                "lavfi",
+                "-i",
+                `color=c=0x24133F:s=${VIDEO_RENDER_WIDTH}x${VIDEO_RENDER_HEIGHT}:r=${VIDEO_RENDER_FPS}:d=${duration}`,
+                "-i",
+                audioPath,
+                "-filter_complex",
+                `[0:v]${celestialFilter}[v]`,
+                "-map",
+                "[v]",
+                "-map",
+                "1:a:0",
+                "-c:v",
+                "libx264",
+                "-preset",
+                VIDEO_RENDER_PRESET,
+                "-crf",
+                VIDEO_RENDER_CRF,
+                "-pix_fmt",
+                "yuv420p",
+                "-r",
+                String(VIDEO_RENDER_FPS),
+                "-aspect",
+                "16:9",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "192k",
+                "-ar",
+                "24000",
+                "-ac",
+                "1",
+                "-shortest",
+                "-movflags",
+                "+faststart",
+                outputPath
+            ],
+            {
+                windowsHide: true,
+                maxBuffer: 1024 * 1024 * 20
+            }
+        );
+    } finally {
+        await fs.rm(
+            subtitlePath,
+            {
+                force: true
+            }
+        );
+    }
+}
+
+function getIntroText(language) {
+    const introTexts = {
+        "fr-FR":
+            "Cette vidéo vous est présentée par Natural Reader.",
+        "en-GB":
+            "This video is from Natural Reader.",
+        "en-NG":
+            "This video is from Natural Reader.",
+        "de-DE":
+            "Dieses Video stammt von Natural Reader.",
+        "ee-TG":
+            "Video sia tso Natural Reader gbɔ na mi."
+    };
+
+    return (
+        introTexts[language] ||
+        introTexts["fr-FR"]
+    );
+}
+
+async function createIntroVideo(
+    outputPath,
+    voiceId,
+    language,
+    speed,
+    mode,
+    isEwe
+) {
+    const introDuration = 5;
+
+    const introCardPath =
+        path.join(
+            path.dirname(outputPath),
+            "intro-card.mp4"
+        );
+
+    const introVoicePath =
+        path.join(
+            path.dirname(outputPath),
+            isEwe
+                ? "intro-voice.wav"
+                : "intro-voice.mp3"
+        );
+
+    await renderTitleCard(
+        introCardPath,
+        "NATURAL READER",
+        "",
+        introDuration,
+        "intro"
+    );
+
+    const settings =
+        MODE_SETTINGS[mode] ||
+        MODE_SETTINGS.intelligent;
+
+    const effectiveSpeed =
+        Math.max(
+            0.5,
+            Math.min(
+                2,
+                Number(speed || 1) *
+                    settings.rate
+            )
+        );
+
+    const introText =
+        getIntroText(language);
+
+    if (isEwe) {
+        await generateEweSceneAudio(
+            introText,
+            introVoicePath
+        );
+    } else {
+        await generateSceneAudio(
+            introText,
+            voiceId,
+            convertSpeedToRate(
+                effectiveSpeed
+            ),
+            settings.pitch,
+            introVoicePath
+        );
+    }
+
+    const introMixedPath =
+        path.join(
+            path.dirname(outputPath),
+            "intro-final.mp4"
+        );
+
+    await execFileAsync(
+        ffmpegPath,
+        [
+            "-y",
+            "-i",
+            introCardPath,
+            "-i",
+            introVoicePath,
+            "-filter_complex",
+            "[1:a]apad=pad_dur=5[voice];[0:a][voice]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]",
+            "-map",
+            "0:v:0",
+            "-map",
+            "[a]",
+            "-t",
+            String(introDuration),
+            "-c:v",
+            "libx264",
+            "-preset",
+            VIDEO_RENDER_PRESET,
+            "-crf",
+            VIDEO_RENDER_CRF,
+            "-pix_fmt",
+            "yuv420p",
+            "-r",
+            String(VIDEO_RENDER_FPS),
+            "-aspect",
+            "16:9",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-ar",
+            "24000",
+            "-ac",
+            "1",
+            "-movflags",
+            "+faststart",
+            introMixedPath
+        ],
+        {
+            windowsHide: true,
+            maxBuffer: 1024 * 1024 * 10
+        }
+    );
+
+    return introMixedPath;
+}
+
 async function buildReel({
     text,
     voiceName,
@@ -664,9 +1030,13 @@ async function buildReel({
     mode = "intelligent",
     language = "fr-FR"
 }) {
-    const isEwe = language === "ee-TG";
+    const isEwe =
+        language === "ee-TG";
 
-    const voiceId = isEwe ? null : getVoiceId(voiceName);
+    const voiceId =
+        isEwe
+            ? null
+            : getVoiceId(voiceName);
 
     if (!isEwe && !voiceId) {
         throw new Error(
@@ -674,24 +1044,14 @@ async function buildReel({
         );
     }
 
-    const settings =
-        MODE_SETTINGS[mode] ||
-        MODE_SETTINGS.intelligent;
-
-    const analysis =
-        await analyzeText(
-            text,
-            mode
-        );
-
-    const allScenes = analysis?.scenes || [];
-    const scenes = allScenes.slice(0, 8);
-
-    if (!scenes.length) {
+    if (!text || !String(text).trim()) {
         throw new Error(
-            "Aucune scène détectée."
+            "Aucun texte à transformer en vidéo."
         );
     }
+
+    const fullText =
+        String(text).trim();
 
     const tempRoot =
         path.join(
@@ -700,7 +1060,10 @@ async function buildReel({
         );
 
     const outputDir =
-        path.join(__dirname, "output");
+        path.join(
+            __dirname,
+            "output"
+        );
 
     await fs.mkdir(
         tempRoot,
@@ -716,178 +1079,97 @@ async function buildReel({
         }
     );
 
-    const sceneFiles = [];
-    const sceneReport = [];
-    const successfulImages = [];
+    const videoFiles = [];
 
     try {
+        console.log(
+            "NaturalReader Reel : création de l'introduction avec voix"
+        );
+
         const introPath =
             path.join(
                 tempRoot,
                 "intro.mp4"
             );
 
-        await renderTitleCard(
-            introPath,
-            "NATURAL READER",
-            "",
-            2
+        const introVideo =
+            await createIntroVideo(
+                introPath,
+                voiceId,
+                language,
+                speed,
+                mode,
+                isEwe
+            );
+
+        videoFiles.push(
+            introVideo
         );
 
-        sceneFiles.push(
-            introPath
+        console.log(
+            "NaturalReader Reel : génération de la voix du texte complet"
         );
 
-        for (
-            let index = 0;
-            index < scenes.length;
-            index++
-        ) {
-            const scene =
-                scenes[index];
-
-            console.log(
-                `NaturalReader Reel : scène ${index + 1}/${scenes.length}`,
-                {
-                    narration:
-                        scene.narration,
-                    subject:
-                        scene.subject,
-                    location:
-                        scene.location,
-                    action:
-                        scene.action
-                }
+        const audioPath =
+            path.join(
+                tempRoot,
+                `main-audio.${isEwe ? "wav" : "mp3"}`
             );
 
-            let imageResult;
+        const settings =
+            MODE_SETTINGS[mode] ||
+            MODE_SETTINGS.intelligent;
 
-            if (successfulImages.length) {
-                imageResult = successfulImages[0];
-
-                console.warn(
-                    `Réutilisation de la même image pour la scène ${index + 1}.`
-                );
-            } else {
-                try {
-                    imageResult =
-                        await findAndDownloadImage(
-                            scene,
-                            index
-                        );
-
-                    if (imageResult?.localPath) {
-                        successfulImages.push(
-                            imageResult
-                        );
-                    }
-                } catch (imageError) {
-                    console.warn(
-                        `Image indisponible pour la scène ${index + 1}: ${imageError.message}`
-                    );
-
-                    const fallbackImagePath =
-                        path.join(
-                            tempRoot,
-                            `fallback-scene-${String(index).padStart(3, "0")}.png`
-                        );
-
-                    await createFallbackSceneImage(
-                        fallbackImagePath
-                    );
-
-                    imageResult = {
-                        localPath: fallbackImagePath,
-                        sceneSignature: {
-                            fallback: true,
-                            scene:
-                                scene?.narration || ""
-                        }
-                    };
-
-                    successfulImages.push(
-                        imageResult
-                    );
-
-                    console.warn(
-                        `Image de secours générée pour la première scène.`
-                    );
-                }
-            }
-            const audioPath =
-                path.join(
-                    tempRoot,
-                    `audio-${String(index).padStart(3, "0")}.${isEwe ? "wav" : "mp3"}`
-                );
-
-            const videoPath =
-                path.join(
-                    tempRoot,
-                    `scene-${String(index).padStart(3, "0")}.mp4`
-                );
-
-            const effectiveSpeed =
-                Math.max(
-                    0.5,
-                    Math.min(
-                        2,
-                        Number(speed || 1) *
-                            settings.rate
-                    )
-                );
-            if (isEwe) {
-                await generateEweSceneAudio(
-                    scene.narration,
-                    audioPath
-                );
-            } else {
-                await generateSceneAudio(
-                    scene.narration,
-                    voiceId,
-                    convertSpeedToRate(
-                        effectiveSpeed
-                    ),
-                    settings.pitch,
-                    audioPath
-                );
-            }
-
-            const duration =
-                await getAudioDuration(
-                    audioPath
-                );
-
-            await renderScene(
-                imageResult.localPath,
-                audioPath,
-                videoPath,
-                scene.action,
-                index,
-                scene.narration
+        const effectiveSpeed =
+            Math.max(
+                0.5,
+                Math.min(
+                    2,
+                    Number(speed || 1) *
+                        settings.rate
+                )
             );
 
-            sceneFiles.push(
-                videoPath
+        if (isEwe) {
+            await generateEweSceneAudio(
+                fullText,
+                audioPath
             );
-
-            sceneReport.push({
-                index,
-                narration:
-                    scene.narration,
-                subject:
-                    scene.subject,
-                location:
-                    scene.location,
-                action:
-                    scene.action,
-                image:
-                    imageResult.title ||
-                    "Image recherchée",
-                imagePath:
-                    imageResult.localPath,
-                duration
-            });
+        } else {
+            await generateSceneAudio(
+                fullText,
+                voiceId,
+                convertSpeedToRate(
+                    effectiveSpeed
+                ),
+                settings.pitch,
+                audioPath
+            );
         }
+
+        console.log(
+            "NaturalReader Reel : création de l'animation céleste"
+        );
+
+        const mainVideoPath =
+            path.join(
+                tempRoot,
+                "main-celestial.mp4"
+            );
+
+        await renderAnimatedCelestialVideo(
+            audioPath,
+            mainVideoPath,
+            fullText
+        );
+
+        videoFiles.push(
+            mainVideoPath
+        );
+
+        console.log(
+            "NaturalReader Reel : création de l'appréciation finale"
+        );
 
         const outroPath =
             path.join(
@@ -899,10 +1181,11 @@ async function buildReel({
             outroPath,
             "Appréciation",
             "",
-            2
+            4,
+            "outro"
         );
 
-        sceneFiles.push(
+        videoFiles.push(
             outroPath
         );
 
@@ -913,7 +1196,7 @@ async function buildReel({
             );
 
         await assembleSceneVideos(
-            sceneFiles,
+            videoFiles,
             finalPath
         );
 
@@ -921,25 +1204,20 @@ async function buildReel({
             outputPath:
                 finalPath,
             sceneCount:
-                scenes.length,
-            scenes:
-                sceneReport,
-            subtitles:
-                sceneReport.map(
-                    scene => ({
-                        index:
-                            scene.index,
-                        text:
-                            scene.narration,
-                        duration:
-                            scene.duration
-                    })
-                ),
-            format: {
-                width: 1920,
-                height: 1080,
-                aspect: "16:9"
-            }
+                1,
+            scenes: [
+                {
+                    index: 0,
+                    narration: fullText,
+                    visualStyle:
+                        "sky-blue-celestial-birds"
+                }
+            ],
+            subtitles: true,
+            resolution:
+                "1920x1080",
+            aspectRatio:
+                "16:9"
         };
     } finally {
         await fs.rm(
@@ -948,37 +1226,9 @@ async function buildReel({
                 recursive: true,
                 force: true
             }
-        ).catch(() => {});
+        );
     }
 }
-
 module.exports = {
     buildReel
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
