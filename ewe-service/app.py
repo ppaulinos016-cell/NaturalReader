@@ -12,6 +12,26 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from transformers import VitsModel, AutoTokenizer
 
+import importlib.util
+
+EWE_GRAMMAR_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "ewe-grammar.py"
+)
+
+_ewe_grammar_spec = importlib.util.spec_from_file_location(
+    "ewe_grammar",
+    EWE_GRAMMAR_PATH
+)
+
+ewe_grammar = importlib.util.module_from_spec(
+    _ewe_grammar_spec
+)
+
+_ewe_grammar_spec.loader.exec_module(
+    ewe_grammar
+)
+
 MODEL_NAME = "facebook/mms-tts-ewe"
 PORT = int(os.environ.get("PORT", "8001"))
 MAX_CHUNK_CHARS = 1600
@@ -235,6 +255,18 @@ def health():
 @app.post("/tts")
 def tts(request: TTSRequest):
     text = convert_numbers_to_ewe(request.text.strip())
+
+    grammar = ewe_grammar.analyze_ewe(text)
+
+    print(
+        "Analyse grammaticale Éwé : "
+        f"type={grammar.sentence_type}, "
+        f"pronouns={grammar.pronouns}, "
+        f"tense_aspect={grammar.tense_aspect}, "
+        f"negation={grammar.negation}, "
+        f"strategy={grammar.speech_strategy}, "
+        f"confidence={grammar.confidence}"
+    )
 
     if not text:
         raise HTTPException(

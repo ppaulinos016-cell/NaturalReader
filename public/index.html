@@ -75,6 +75,20 @@
             </div>
         </div>
 
+        <div class="history-toolbar">
+            <button id="historyButton" class="secondary-button" type="button">
+                📜 Historique
+            </button>
+        </div>
+
+        <div id="historyPanel" class="history-panel" hidden>
+            <div class="history-header">
+                <h2>📜 Historique</h2>
+                <button id="clearHistoryButton" class="text-button danger" type="button">Supprimer tout l’historique</button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+        </div>
+
         <div class="translation-panel">
             <div class="control-group translation-control">
                 <label for="translationLanguage">Traduire en</label>
@@ -109,6 +123,14 @@
                     type="button"
                     disabled>
                     🖼️ Télécharger en image
+                </button>
+
+<button
+                    id="downloadTranslationWordButton"
+                    class="translation-download-button word-download-button"
+                    type="button"
+                    disabled>
+                    📝 Télécharger en Word
                 </button>
             </div>
         </div>
@@ -207,14 +229,6 @@
             <button id="downloadButton" class="secondary-button" disabled type="button">
                 ⬇ Télécharger l'audio
             </button>
-
-            <button id="generateVideoButton" class="video-button" type="button">
-                🎬 Générer la vidéo
-            </button>
-
-            <button id="downloadVideoButton" class="secondary-button" disabled type="button">
-                🎥 Télécharger la vidéo
-            </button>
         </div>
 
     </section>
@@ -285,6 +299,4 @@
 
 </body>
 </html>
-
-
 

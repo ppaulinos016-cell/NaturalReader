@@ -6,6 +6,7 @@ const fs = require("fs/promises");
 const os = require("os");
 const crypto = require("crypto");
 const PDFDocument = require("pdfkit");
+const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = require("docx");
 const googleTranslate = require("googletrans").default;
 const { EdgeTTS } = require("node-edge-tts");
 const { registerExpressiveTTS } = require("./expressive-engine");
@@ -591,6 +592,112 @@ app.post("/api/export-pdf", async (req, res) => {
 });
 
 
+app.post("/api/export-word", async (req, res) => {
+    try {
+        const { text, language = "fr" } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({
+                error: "Aucun texte à exporter."
+            });
+        }
+
+        const titles = {
+            fr: "NaturalReader — Traduction",
+            en: "NaturalReader — Translation",
+            de: "NaturalReader — Übersetzung",
+            ee: "NaturalReader — Traduction en Éwé"
+        };
+
+        const paragraphs = text
+            .trim()
+            .split(/\r?\n/)
+            .map(paragraph => paragraph.trim())
+            .filter(Boolean);
+
+        const children = [
+            new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: {
+                    after: 300
+                },
+                children: [
+                    new TextRun({
+                        text: titles[language] || titles.fr,
+                        bold: true,
+                        size: 34
+                    })
+                ]
+            }),
+            new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: {
+                    after: 500
+                },
+                children: [
+                    new TextRun({
+                        text: "NaturalReader",
+                        bold: true,
+                        size: 22
+                    })
+                ]
+            })
+        ];
+
+        paragraphs.forEach(paragraph => {
+            children.push(
+                new Paragraph({
+                    spacing: {
+                        after: 220,
+                        line: 300
+                    },
+                    children: [
+                        new TextRun({
+                            text: paragraph,
+                            size: 24
+                        })
+                    ]
+                })
+            );
+        });
+
+        const document = new Document({
+            creator: "NaturalReader",
+            title: titles[language] || titles.fr,
+            description: "Document traduit avec NaturalReader",
+            sections: [
+                {
+                    properties: {},
+                    children
+                }
+            ]
+        });
+
+        const buffer = await Packer.toBuffer(document);
+
+        res.set({
+            "Content-Type":
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "Content-Length": buffer.length,
+            "Content-Disposition":
+                'attachment; filename="NaturalReader-traduction.docx"',
+            "Cache-Control": "no-cache"
+        });
+
+        res.send(buffer);
+
+    } catch (error) {
+        console.error("Erreur export Word :", error);
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: "Impossible de créer le document Word.",
+                details: error.message
+            });
+        }
+    }
+});
+
 app.post("/api/export-image", async (req, res) => {
     try {
         const { text } = req.body;
@@ -779,15 +886,4 @@ app.post("/api/extract-document", upload.single("file"), async (req, res) => {
         });
     }
 });
-
-
-
-
-
-
-
-
-
-
-
 

@@ -4,10 +4,13 @@ const voiceSelect = document.getElementById("voice");
 const speedSelect = document.getElementById("speed");
 const readingMode = document.getElementById("readingMode");
 const downloadButton = document.getElementById("downloadButton");
-const generateVideoButton = document.getElementById("generateVideoButton");
-const downloadVideoButton = document.getElementById("downloadVideoButton");
-const videoPreview = document.getElementById("videoPreview");
-const videoSubtitle = document.getElementById("videoSubtitle");
+
+const historyButton = document.getElementById("historyButton");
+const historyPanel = document.getElementById("historyPanel");
+const historyList = document.getElementById("historyList");
+const clearHistoryButton = document.getElementById("clearHistoryButton");
+
+const HISTORY_STORAGE_KEY = "naturalReaderHistory";
 
 const readButton = document.getElementById("readButton");
 const pauseButton = document.getElementById("pauseButton");
@@ -25,10 +28,182 @@ let voices = [];
 let currentAudio = null;
 let currentAudioUrl = null;
 let audioReadyForDownload = false;
-let currentVideoUrl = null;
-let videoReadyForDownload = false;
-let videoSubtitleTimings = [];
 
+function getHistory() {
+    try {
+        const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
+        const parsed = saved ? JSON.parse(saved) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error("Erreur lecture historique :", error);
+        return [];
+    }
+}
+
+function saveHistory(history) {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+}
+
+function createHistorySnapshot(action, details = {}) {
+    return {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: new Date().toISOString(),
+        action,
+        text: getText(),
+        language: languageSelect.value,
+        voice: voiceSelect.value,
+        speed: speedSelect.value,
+        readingMode: readingMode ? readingMode.value : "normal",
+        translationLanguage: document.getElementById("translationLanguage")?.value || "",
+        ...details
+    };
+}
+
+function addHistoryEntry(action, details = {}) {
+    const entry = createHistorySnapshot(action, details);
+    const history = getHistory();
+
+    history.unshift(entry);
+
+    saveHistory(history.slice(0, 100));
+    renderHistory();
+}
+
+function formatHistoryDate(timestamp) {
+    const date = new Date(timestamp);
+
+    return date.toLocaleString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+}
+
+function restoreHistoryEntry(id) {
+    const history = getHistory();
+    const entry = history.find(item => item.id === id);
+
+    if (!entry) return;
+
+    textInput.value = entry.text || "";
+
+    if (entry.language && [...languageSelect.options].some(option => option.value === entry.language)) {
+        languageSelect.value = entry.language;
+        loadVoices();
+
+        if (entry.voice !== undefined) {
+            voiceSelect.value = entry.voice;
+        }
+    }
+
+    if (entry.speed !== undefined) {
+        speedSelect.value = entry.speed;
+    }
+
+    if (readingMode && entry.readingMode) {
+        readingMode.value = entry.readingMode;
+    }
+
+    const translationLanguage = document.getElementById("translationLanguage");
+
+    if (
+        translationLanguage &&
+        entry.translationLanguage &&
+        [...translationLanguage.options].some(option => option.value === entry.translationLanguage)
+    ) {
+        translationLanguage.value = entry.translationLanguage;
+    }
+
+    updateCounters();
+
+    readingStatus.textContent = "Historique restauré.";
+
+    if (historyPanel) {
+        historyPanel.hidden = true;
+    }
+}
+
+function deleteHistoryEntry(id) {
+    const history = getHistory().filter(item => item.id !== id);
+    saveHistory(history);
+    renderHistory();
+}
+
+function clearHistory() {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+    renderHistory();
+}
+
+function renderHistory() {
+    if (!historyList) return;
+
+    const history = getHistory();
+
+    historyList.innerHTML = "";
+
+    if (!history.length) {
+        historyList.innerHTML = '<div class="history-empty">Aucun historique.</div>';
+        return;
+    }
+
+    history.forEach(entry => {
+        const item = document.createElement("div");
+        item.className = "history-item";
+
+        const preview = (entry.text || "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        item.innerHTML = `
+            <div class="history-item-main">
+                <div class="history-item-date">${formatHistoryDate(entry.timestamp)}</div>
+                <div class="history-item-action">${entry.action || "Action"}</div>
+                <div class="history-item-preview">${preview || "Aucun texte"}</div>
+            </div>
+            <button class="history-delete text-button danger" type="button">Supprimer</button>
+        `;
+
+        item.addEventListener("click", event => {
+            if (event.target.closest(".history-delete")) return;
+            restoreHistoryEntry(entry.id);
+        });
+
+        item.querySelector(".history-delete").addEventListener("click", event => {
+            event.stopPropagation();
+            deleteHistoryEntry(entry.id);
+        });
+
+        historyList.appendChild(item);
+    });
+}
+
+function toggleHistory() {
+    if (!historyPanel) return;
+
+    historyPanel.hidden = !historyPanel.hidden;
+
+    if (!historyPanel.hidden) {
+        renderHistory();
+    }
+}
+if (historyButton) {
+    historyButton.addEventListener("click", toggleHistory);
+}
+
+if (clearHistoryButton) {
+    clearHistoryButton.addEventListener("click", () => {
+        if (!getHistory().length) return;
+
+        if (confirm("Supprimer tout l’historique ?")) {
+            clearHistory();
+        }
+    });
+}
+
+renderHistory();
 function getText() {
     return textInput.value.replace(/\r\n/g, "\n");
 }
@@ -44,7 +219,7 @@ function updateCounters() {
     const words = getWordCount(text);
 
     characterCount.textContent =
-        `${characters} caractère${characters !== 1 ? "s" : ""}`;
+        `${characters} caractÃ¨re${characters !== 1 ? "s" : ""}`;
 
     wordCount.textContent =
         `${words} mot${words !== 1 ? "s" : ""}`;
@@ -64,15 +239,15 @@ function cleanText() {
     updateCounters();
 
     readingStatus.textContent = text
-        ? "✨ Texte nettoyé et prêt à être lu"
-        : "Aucun texte à nettoyer";
+        ? "âœ¨ Texte nettoyÃ© et prÃªt Ã  Ãªtre lu"
+        : "Aucun texte Ã  nettoyer";
 }
 
 function clearText() {
     stopReading();
     textInput.value = "";
     updateCounters();
-    readingStatus.textContent = "Prêt à lire";
+    readingStatus.textContent = "PrÃªt Ã  lire";
 }
 
 function estimateReadingTime() {
@@ -103,7 +278,7 @@ function detectLanguage() {
     const text = ` ${getText().toLowerCase()} `;
 
     if (!text.trim()) {
-        readingStatus.textContent = "Aucun texte à analyser.";
+        readingStatus.textContent = "Aucun texte Ã  analyser.";
         return;
     }
 
@@ -120,7 +295,7 @@ function detectLanguage() {
         ],
         "de-DE": [
             " der ", " die ", " das ", " ein ",
-            " ist ", " und ", " mit ", " für ",
+            " ist ", " und ", " mit ", " fÃ¼r ",
             " ich ", " nicht ", " hallo "
         ]
     };
@@ -138,7 +313,7 @@ function detectLanguage() {
 
     if (scores[detected] === 0) {
         readingStatus.textContent =
-            "Langue non déterminée. Choisissez-la manuellement.";
+            "Langue non dÃ©terminÃ©e. Choisissez-la manuellement.";
         return;
     }
 
@@ -146,13 +321,13 @@ function detectLanguage() {
     loadVoices();
 
     const names = {
-        "fr-FR": "Français",
+        "fr-FR": "FranÃ§ais",
         "en-GB": "English",
         "de-DE": "Deutsch"
     };
 
     readingStatus.textContent =
-        `🌍 Langue détectée : ${names[detected]}`;
+        `ðŸŒ Langue dÃ©tectÃ©e : ${names[detected]}`;
 }
 
 function loadVoices() {
@@ -171,7 +346,7 @@ function loadVoices() {
             "Microsoft Conrad Online (Natural)"
         ],
         "ee-TG": [
-            "Éwé — MMS-TTS"
+            "Ã‰wÃ© â€” MMS-TTS"
         ]
     };
 
@@ -195,7 +370,7 @@ async function speak() {
     const text = getText().trim();
 
     if (!text) {
-        readingStatus.textContent = "⚠️ Aucun texte à lire";
+        readingStatus.textContent = "âš ï¸ Aucun texte Ã  lire";
         return;
     }
 
@@ -203,11 +378,11 @@ async function speak() {
     const index = Number(voiceSelect.value);
 
     if (!isEwe && (Number.isNaN(index) || !voices[index])) {
-        readingStatus.textContent = "⚠️ Sélectionnez une voix.";
+        readingStatus.textContent = "âš ï¸ SÃ©lectionnez une voix.";
         return;
     }
 
-    const selectedVoice = isEwe ? "Éwé — MMS-TTS" : voices[index].name;
+    const selectedVoice = isEwe ? "Ã‰wÃ© â€” MMS-TTS" : voices[index].name;
     const speed = Number(speedSelect.value);
     const mode = readingMode ? readingMode.value : "normal";
 
@@ -233,8 +408,8 @@ async function speak() {
 
     readingStatus.textContent =
         mode === "normal"
-            ? `⏳ Génération avec ${selectedVoice}...`
-            : `🧠 Analyse intelligente — mode ${modeLabel}...`;
+            ? `â³ GÃ©nÃ©ration avec ${selectedVoice}...`
+            : `ðŸ§  Analyse intelligente â€” mode ${modeLabel}...`;
 
     try {
         const endpoint =
@@ -263,7 +438,7 @@ async function speak() {
         });
 
         if (!response.ok) {
-            let message = "Erreur lors de la génération audio.";
+            let message = "Erreur lors de la gÃ©nÃ©ration audio.";
 
             try {
                 const data = await response.json();
@@ -272,7 +447,7 @@ async function speak() {
                     message = data.error;
                 }
             } catch {
-                // Réponse non JSON.
+                // RÃ©ponse non JSON.
             }
 
             throw new Error(message);
@@ -281,7 +456,7 @@ async function speak() {
         const blob = await response.blob();
 
         if (!blob.size) {
-            throw new Error("Le fichier audio généré est vide.");
+            throw new Error("Le fichier audio gÃ©nÃ©rÃ© est vide.");
         }
 
         currentAudioUrl = URL.createObjectURL(blob);
@@ -290,8 +465,8 @@ async function speak() {
         currentAudio.onplay = () => {
             readingStatus.textContent =
                 mode === "normal"
-                    ? `🔊 Lecture en cours — ${selectedVoice}`
-                    : `🔊 Lecture ${modeLabel} — ${selectedVoice}`;
+                    ? `ðŸ”Š Lecture en cours â€” ${selectedVoice}`
+                    : `ðŸ”Š Lecture ${modeLabel} â€” ${selectedVoice}`;
         };
 
         currentAudio.onended = () => {
@@ -300,7 +475,7 @@ async function speak() {
             readButton.disabled = false;
 
             readingStatus.textContent =
-                "✅ Lecture terminée. L'audio est maintenant disponible au téléchargement.";
+                "âœ… Lecture terminÃ©e. L'audio est maintenant disponible au tÃ©lÃ©chargement.";
         };
 
         currentAudio.onerror = () => {
@@ -309,7 +484,7 @@ async function speak() {
             readButton.disabled = false;
 
             readingStatus.textContent =
-                "❌ Erreur pendant la lecture audio.";
+                "âŒ Erreur pendant la lecture audio.";
         };
 
         await currentAudio.play();
@@ -322,7 +497,7 @@ async function speak() {
         audioReadyForDownload = false;
 
         readingStatus.textContent =
-            `❌ ${error.message}`;
+            `âŒ ${error.message}`;
     }
 }
 
@@ -330,170 +505,9 @@ async function speak() {
 function splitSubtitleSentences(text) {
     return text
         .replace(/\\r\\n/g, "\\n")
-        .split(/(?<=[.!?…。！？])\\s+/)
+        .split(/(?<=[.!?â€¦ã€‚ï¼ï¼Ÿ])\\s+/)
         .map(value => value.trim())
         .filter(Boolean);
-}
-
-function setupVideoSubtitles() {
-    if (!videoPreview || !videoSubtitle) {
-        return;
-    }
-
-    if (videoPreview._naturalReaderSubtitleHandler) {
-        videoPreview.removeEventListener(
-            "timeupdate",
-            videoPreview._naturalReaderSubtitleHandler
-        );
-    }
-
-    const handler = () => {
-        const currentTime =
-            Number(videoPreview.currentTime) || 0;
-
-        if (!videoSubtitleTimings.length) {
-            videoSubtitle.textContent = "";
-            return;
-        }
-
-        const current =
-            videoSubtitleTimings.find(
-                item =>
-                    currentTime >= item.start &&
-                    currentTime < item.end
-            );
-
-        videoSubtitle.textContent =
-            current
-                ? current.narration
-                : "";
-    };
-
-    videoPreview._naturalReaderSubtitleHandler =
-        handler;
-
-    videoPreview.addEventListener(
-        "timeupdate",
-        handler
-    );
-
-    handler();
-}
-async function generateVideo() {
-    const text = getText().trim();
-
-    if (!text) {
-        readingStatus.textContent =
-            "⚠️ Aucun texte à transformer en vidéo.";
-        return;
-    }
-
-    const isEwe = languageSelect.value === "ee-TG";
-    const index = Number(voiceSelect.value);
-
-    if (!isEwe && (Number.isNaN(index) || !voices[index])) {
-        readingStatus.textContent =
-            "⚠️ Sélectionnez une voix.";
-        return;
-    }
-
-    const selectedVoice = isEwe ? "Éwé — MMS-TTS" : voices[index].name;
-    const speed = Number(speedSelect.value);
-    const mode =
-        readingMode ? readingMode.value : "normal";
-    const language = languageSelect.value;
-
-    if (currentVideoUrl) {
-        URL.revokeObjectURL(currentVideoUrl);
-        currentVideoUrl = null;
-    }
-
-    videoReadyForDownload = false;
-    downloadVideoButton.disabled = true;
-    generateVideoButton.disabled = true;
-
-    const modeLabel =
-        readingMode
-            ? readingMode.options[
-                readingMode.selectedIndex
-            ].text
-            : "Normal";
-
-    readingStatus.textContent =
-        `🎬 Génération de votre vidéo — ${selectedVoice} — ${modeLabel}...`;
-
-    try {
-        const response =
-            await fetch("/api/generate-reel", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    text,
-                    voiceName: selectedVoice,
-                    speed,
-                    mode,
-                    language
-                })
-            });
-
-        if (!response.ok) {
-            let message =
-                "Erreur lors de la génération vidéo.";
-
-            try {
-                const data =
-                    await response.json();
-
-                if (data.error) {
-                    message = data.error;
-                }
-            } catch {
-                // Réponse non JSON.
-            }
-
-            throw new Error(message);
-        }
-
-        const blob =
-            await response.blob();
-
-        if (!blob.size) {
-            throw new Error(
-                "La vidéo générée est vide."
-            );
-        }
-
-        currentVideoUrl =
-            URL.createObjectURL(blob);
-
-        videoReadyForDownload = true;
-        downloadVideoButton.disabled = false;
-
-        if (videoPreview) {
-            videoPreview.src = currentVideoUrl;
-            videoPreview.load();
-            setupVideoSubtitles();
-        }
-        generateVideoButton.disabled = false;
-
-        readingStatus.textContent =
-            "✅ Vidéo générée avec succès. Elle est prête à être téléchargée.";
-
-    } catch (error) {
-        console.error(
-            "Erreur vidéo NaturalReader :",
-            error
-        );
-
-        videoReadyForDownload = false;
-        downloadVideoButton.disabled = true;
-        generateVideoButton.disabled = false;
-
-        readingStatus.textContent =
-            `❌ ${error.message}`;
-    }
 }
 
 function pauseReading() {
@@ -503,10 +517,10 @@ function pauseReading() {
 
     if (!currentAudio.paused) {
         currentAudio.pause();
-        readingStatus.textContent = "⏸ Lecture en pause";
+        readingStatus.textContent = "â¸ Lecture en pause";
     } else {
         currentAudio.play();
-        readingStatus.textContent = "▶️ Lecture reprise";
+        readingStatus.textContent = "â–¶ï¸ Lecture reprise";
     }
 }
 function stopReading() {
@@ -519,14 +533,14 @@ function stopReading() {
     downloadButton.disabled = true;
     readButton.disabled = false;
 
-    readingStatus.textContent = "⏹ Lecture arrêtée";
+    readingStatus.textContent = "â¹ Lecture arrÃªtÃ©e";
 }
 textInput.addEventListener("input", updateCounters);
 
 languageSelect.addEventListener("change", () => {
     loadVoices();
     readingStatus.textContent =
-        "Langue sélectionnée. Texte prêt à être lu.";
+        "Langue sÃ©lectionnÃ©e. Texte prÃªt Ã  Ãªtre lu.";
 });
 
 readingMode.addEventListener("change", () => {
@@ -536,7 +550,7 @@ readingMode.addEventListener("change", () => {
     readingStatus.textContent =
         readingMode.value === "normal"
             ? "Mode Normal : lecture standard."
-            : `Mode ${modeLabel} : analyse intelligente activée.`;
+            : `Mode ${modeLabel} : analyse intelligente activÃ©e.`;
 });
 
 speedSelect.addEventListener("change", () => {
@@ -544,17 +558,17 @@ speedSelect.addEventListener("change", () => {
 
     if (duration) {
         readingStatus.textContent =
-            `🎚️ Durée estimée : ${formatDuration(duration)}`;
+            `ðŸŽšï¸ DurÃ©e estimÃ©e : ${formatDuration(duration)}`;
     }
 });
 
-readButton.addEventListener("click", speak);
+readButton.addEventListener("click", () => { addHistoryEntry("Lecture du texte"); speak(); });
 pauseButton.addEventListener("click", pauseReading);
 stopButton.addEventListener("click", stopReading);
 
-cleanButton.addEventListener("click", cleanText);
-detectButton.addEventListener("click", detectLanguage);
-clearButton.addEventListener("click", clearText);
+cleanButton.addEventListener("click", () => { cleanText(); addHistoryEntry("Nettoyage du texte"); });
+detectButton.addEventListener("click", () => { detectLanguage(); addHistoryEntry("Détection de la langue"); });
+clearButton.addEventListener("click", () => { clearText(); addHistoryEntry("Effacement du texte"); });
 
 
 updateCounters();
@@ -570,7 +584,7 @@ function updateDownloadButton() {
 downloadButton.addEventListener("click", () => {
     if (!audioReadyForDownload || !currentAudioUrl) {
         readingStatus.textContent =
-            "⚠️ Le téléchargement sera disponible après la fin de la lecture.";
+            "âš ï¸ Le tÃ©lÃ©chargement sera disponible aprÃ¨s la fin de la lecture.";
         return;
     }
 
@@ -585,47 +599,11 @@ downloadButton.addEventListener("click", () => {
     link.remove();
 
     readingStatus.textContent =
-        "✅ Téléchargement de l'audio lancé.";
+        "âœ… TÃ©lÃ©chargement de l'audio lancÃ©.";
 });
 
 updateDownloadButton();
 
-
-generateVideoButton.addEventListener("click", generateVideo);
-
-downloadVideoButton.addEventListener("click", () => {
-    if (!videoReadyForDownload || !currentVideoUrl) {
-        readingStatus.textContent =
-            "⚠️ Générez d'abord une vidéo.";
-        return;
-    }
-
-    const link =
-        document.createElement("a");
-
-    link.href = currentVideoUrl;
-    link.download =
-        "NaturalReader-Reel.mp4";
-    link.style.display = "none";
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    readingStatus.textContent =
-        "✅ Téléchargement de la vidéo lancé.";
-});
-
-
-if (videoPreview) {
-    videoPreview.addEventListener("play", () => {
-        videoSubtitle.style.display = "block";
-    });
-
-    videoPreview.addEventListener("pause", () => {
-        videoSubtitle.style.display = "block";
-    });
-}
 
 /* ================================
    TRADUCTION
@@ -642,6 +620,9 @@ const downloadTranslationPdfButton =
 
 const downloadTranslationImageButton =
     document.getElementById("downloadTranslationImageButton");
+
+const downloadTranslationWordButton =
+    document.getElementById("downloadTranslationWordButton");
 
 const importButton =
     document.getElementById("importButton");
@@ -679,6 +660,10 @@ function updateTranslationDownloadButtons() {
     if (downloadTranslationImageButton) {
         downloadTranslationImageButton.disabled = disabled;
     }
+
+    if (downloadTranslationWordButton) {
+        downloadTranslationWordButton.disabled = disabled;
+    }
 }
 
 async function translateText() {
@@ -686,7 +671,7 @@ async function translateText() {
 
     if (!text) {
         readingStatus.textContent =
-            "⚠️ Aucun texte à traduire.";
+            "âš ï¸ Aucun texte Ã  traduire.";
         return;
     }
 
@@ -708,7 +693,7 @@ async function translateText() {
         updateTranslationDownloadButtons();
 
         readingStatus.textContent =
-            "ℹ️ Le texte est déjà dans cette langue.";
+            "â„¹ï¸ Le texte est dÃ©jÃ  dans cette langue.";
 
         return;
     }
@@ -721,7 +706,7 @@ async function translateText() {
     updateTranslationDownloadButtons();
 
     readingStatus.textContent =
-        "🌍 Traduction en cours...";
+        "ðŸŒ Traduction en cours...";
 
     try {
         const response = await fetch(
@@ -750,7 +735,7 @@ async function translateText() {
 
         if (!data.text) {
             throw new Error(
-                "La traduction reçue est vide."
+                "La traduction reÃ§ue est vide."
             );
         }
 
@@ -776,13 +761,13 @@ async function translateText() {
         updateTranslationDownloadButtons();
 
         const names = {
-            fr: "Français",
+            fr: "FranÃ§ais",
             en: "English",
             de: "Deutsch"
         };
 
         readingStatus.textContent =
-            `✅ Texte traduit en ${names[target]}.`;
+            `âœ… Texte traduit en ${names[target]}.`;
 
     } catch (error) {
         console.error(
@@ -794,7 +779,7 @@ async function translateText() {
         updateTranslationDownloadButtons();
 
         readingStatus.textContent =
-            `❌ ${error.message}`;
+            `âŒ ${error.message}`;
 
     } finally {
         if (translateButton) {
@@ -805,7 +790,7 @@ async function translateText() {
 
 
 /* ================================
-   IMPORT PHOTO / CAMÉRA / PDF
+   IMPORT PHOTO / CAMÃ‰RA / PDF
 ================================ */
 
 async function extractImportedFile(file) {
@@ -815,7 +800,7 @@ async function extractImportedFile(file) {
 
     if (file.size > 15 * 1024 * 1024) {
         readingStatus.textContent =
-            "⚠️ Le fichier est trop volumineux (15 Mo maximum).";
+            "âš ï¸ Le fichier est trop volumineux (15 Mo maximum).";
         return;
     }
 
@@ -829,8 +814,8 @@ async function extractImportedFile(file) {
 
     readingStatus.textContent =
         file.type === "application/pdf"
-            ? "📄 Extraction du texte du PDF..."
-            : "📷 Analyse de l'image et extraction du texte...";
+            ? "ðŸ“„ Extraction du texte du PDF..."
+            : "ðŸ“· Analyse de l'image et extraction du texte...";
 
     try {
         const response = await fetch(
@@ -853,7 +838,7 @@ async function extractImportedFile(file) {
 
         if (!data.text) {
             throw new Error(
-                "Aucun texte n'a été trouvé."
+                "Aucun texte n'a Ã©tÃ© trouvÃ©."
             );
         }
 
@@ -867,8 +852,8 @@ async function extractImportedFile(file) {
 
         readingStatus.textContent =
             data.type === "pdf"
-                ? "✅ Texte extrait du PDF."
-                : "✅ Texte extrait de l'image.";
+                ? "âœ… Texte extrait du PDF."
+                : "âœ… Texte extrait de l'image.";
 
     } catch (error) {
         console.error(
@@ -877,7 +862,7 @@ async function extractImportedFile(file) {
         );
 
         readingStatus.textContent =
-            `❌ ${error.message}`;
+            `âŒ ${error.message}`;
 
     } finally {
         if (photoInput) {
@@ -987,7 +972,7 @@ if (pdfInput) {
 
 
 /* ================================
-   TÉLÉCHARGEMENT PDF / IMAGE
+   TÃ‰LÃ‰CHARGEMENT PDF / IMAGE
 ================================ */
 
 async function downloadTranslation(format) {
@@ -996,7 +981,7 @@ async function downloadTranslation(format) {
 
     if (!translationReady || !text) {
         readingStatus.textContent =
-            "⚠️ Traduisez d'abord le texte.";
+            "âš ï¸ Traduisez d'abord le texte.";
         return;
     }
 
@@ -1006,17 +991,21 @@ async function downloadTranslation(format) {
     const endpoint =
         format === "pdf"
             ? "/api/export-pdf"
-            : "/api/export-image";
+            : format === "word"
+                ? "/api/export-word"
+                : "/api/export-image";
 
     const filename =
         format === "pdf"
             ? "NaturalReader-traduction.pdf"
-            : "NaturalReader-traduction.svg";
+            : format === "word"
+                ? "NaturalReader-traduction.docx"
+                : "NaturalReader-traduction.svg";
 
     readingStatus.textContent =
         format === "pdf"
-            ? "📄 Création du PDF..."
-            : "🖼️ Création de l'image...";
+            ? "ðŸ“„ CrÃ©ation du PDF..."
+            : "ðŸ–¼ï¸ CrÃ©ation de l'image...";
 
     if (format === "pdf" &&
         downloadTranslationPdfButton) {
@@ -1049,7 +1038,7 @@ async function downloadTranslation(format) {
 
         if (!response.ok) {
             let message =
-                "Impossible de créer le fichier.";
+                "Impossible de crÃ©er le fichier.";
 
             try {
                 const data =
@@ -1060,7 +1049,7 @@ async function downloadTranslation(format) {
                         data.error;
                 }
             } catch {
-                // Réponse non JSON.
+                // RÃ©ponse non JSON.
             }
 
             throw new Error(message);
@@ -1071,7 +1060,7 @@ async function downloadTranslation(format) {
 
         if (!blob.size) {
             throw new Error(
-                "Le fichier généré est vide."
+                "Le fichier gÃ©nÃ©rÃ© est vide."
             );
         }
 
@@ -1096,8 +1085,8 @@ async function downloadTranslation(format) {
 
         readingStatus.textContent =
             format === "pdf"
-                ? "✅ PDF téléchargé."
-                : "✅ Image téléchargée.";
+                ? "âœ… PDF tÃ©lÃ©chargÃ©."
+                : "âœ… Image tÃ©lÃ©chargÃ©e.";
 
     } catch (error) {
         console.error(
@@ -1106,7 +1095,7 @@ async function downloadTranslation(format) {
         );
 
         readingStatus.textContent =
-            `❌ ${error.message}`;
+            `âŒ ${error.message}`;
 
     } finally {
         updateTranslationDownloadButtons();
