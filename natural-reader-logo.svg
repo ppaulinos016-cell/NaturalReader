@@ -1,0 +1,14 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="220" fill="#ffffff"/>
+  <circle cx="512" cy="430" r="250" fill="#2563eb"/>
+  <path d="M365 590V270h82l135 180V270h77v320h-82L442 410v180z" fill="#ffffff"/>
+  <text x="512" y="790" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="92" font-weight="700"
+        fill="#172033">NATURAL READER</text>
+  <text x="512" y="870" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="48" font-weight="500"
+        fill="#2563eb">NR</text>
+</svg>
+

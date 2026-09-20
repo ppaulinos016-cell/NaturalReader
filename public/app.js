@@ -119,7 +119,7 @@ function restoreHistoryEntry(id) {
 
     updateCounters();
 
-    readingStatus.textContent = "Historique restauré.";
+    readingStatus.textContent = "Historique restaurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©.";
 
     if (historyPanel) {
         historyPanel.hidden = true;
@@ -197,7 +197,7 @@ if (clearHistoryButton) {
     clearHistoryButton.addEventListener("click", () => {
         if (!getHistory().length) return;
 
-        if (confirm("Supprimer tout l’historique ?")) {
+        if (confirm("Supprimer tout lÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢historique ?")) {
             clearHistory();
         }
     });
@@ -219,7 +219,7 @@ function updateCounters() {
     const words = getWordCount(text);
 
     characterCount.textContent =
-        `${characters} caractÃ¨re${characters !== 1 ? "s" : ""}`;
+        `${characters} caractÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨re${characters !== 1 ? "s" : ""}`;
 
     wordCount.textContent =
         `${words} mot${words !== 1 ? "s" : ""}`;
@@ -239,15 +239,15 @@ function cleanText() {
     updateCounters();
 
     readingStatus.textContent = text
-        ? "âœ¨ Texte nettoyÃ© et prÃªt Ã  Ãªtre lu"
-        : "Aucun texte Ã  nettoyer";
+        ? "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ Texte nettoyÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© et prÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªt ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªtre lu"
+        : "Aucun texte ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  nettoyer";
 }
 
 function clearText() {
     stopReading();
     textInput.value = "";
     updateCounters();
-    readingStatus.textContent = "PrÃªt Ã  lire";
+    readingStatus.textContent = "PrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªt ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  lire";
 }
 
 function estimateReadingTime() {
@@ -278,7 +278,7 @@ function detectLanguage() {
     const text = ` ${getText().toLowerCase()} `;
 
     if (!text.trim()) {
-        readingStatus.textContent = "Aucun texte Ã  analyser.";
+        readingStatus.textContent = "Aucun texte ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  analyser.";
         return;
     }
 
@@ -295,7 +295,7 @@ function detectLanguage() {
         ],
         "de-DE": [
             " der ", " die ", " das ", " ein ",
-            " ist ", " und ", " mit ", " fÃ¼r ",
+            " ist ", " und ", " mit ", " fÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼r ",
             " ich ", " nicht ", " hallo "
         ]
     };
@@ -313,7 +313,7 @@ function detectLanguage() {
 
     if (scores[detected] === 0) {
         readingStatus.textContent =
-            "Langue non dÃ©terminÃ©e. Choisissez-la manuellement.";
+            "Langue non dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©terminÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e. Choisissez-la manuellement.";
         return;
     }
 
@@ -321,13 +321,13 @@ function detectLanguage() {
     loadVoices();
 
     const names = {
-        "fr-FR": "FranÃ§ais",
+        "fr-FR": "FranÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ais",
         "en-GB": "English",
         "de-DE": "Deutsch"
     };
 
     readingStatus.textContent =
-        `ðŸŒ Langue dÃ©tectÃ©e : ${names[detected]}`;
+        `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Langue dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©tectÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e : ${names[detected]}`;
 }
 
 function loadVoices() {
@@ -346,7 +346,7 @@ function loadVoices() {
             "Microsoft Conrad Online (Natural)"
         ],
         "ee-TG": [
-            "Ã‰wÃ© â€” MMS-TTS"
+            "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°wÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â MMS-TTS"
         ]
     };
 
@@ -370,7 +370,7 @@ async function speak() {
     const text = getText().trim();
 
     if (!text) {
-        readingStatus.textContent = "âš ï¸ Aucun texte Ã  lire";
+        readingStatus.textContent = "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Aucun texte ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  lire";
         return;
     }
 
@@ -378,11 +378,11 @@ async function speak() {
     const index = Number(voiceSelect.value);
 
     if (!isEwe && (Number.isNaN(index) || !voices[index])) {
-        readingStatus.textContent = "âš ï¸ SÃ©lectionnez une voix.";
+        readingStatus.textContent = "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â SÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©lectionnez une voix.";
         return;
     }
 
-    const selectedVoice = isEwe ? "Ã‰wÃ© â€” MMS-TTS" : voices[index].name;
+    const selectedVoice = isEwe ? "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°wÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â MMS-TTS" : voices[index].name;
     const speed = Number(speedSelect.value);
     const mode = readingMode ? readingMode.value : "normal";
 
@@ -408,8 +408,8 @@ async function speak() {
 
     readingStatus.textContent =
         mode === "normal"
-            ? `â³ GÃ©nÃ©ration avec ${selectedVoice}...`
-            : `ðŸ§  Analyse intelligente â€” mode ${modeLabel}...`;
+            ? `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ GÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ration avec ${selectedVoice}...`
+            : `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  Analyse intelligente ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â mode ${modeLabel}...`;
 
     try {
         const endpoint =
@@ -438,7 +438,7 @@ async function speak() {
         });
 
         if (!response.ok) {
-            let message = "Erreur lors de la gÃ©nÃ©ration audio.";
+            let message = "Erreur lors de la gÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ration audio.";
 
             try {
                 const data = await response.json();
@@ -447,7 +447,7 @@ async function speak() {
                     message = data.error;
                 }
             } catch {
-                // RÃ©ponse non JSON.
+                // RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ponse non JSON.
             }
 
             throw new Error(message);
@@ -456,7 +456,7 @@ async function speak() {
         const blob = await response.blob();
 
         if (!blob.size) {
-            throw new Error("Le fichier audio gÃ©nÃ©rÃ© est vide.");
+            throw new Error("Le fichier audio gÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©rÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© est vide.");
         }
 
         currentAudioUrl = URL.createObjectURL(blob);
@@ -465,8 +465,8 @@ async function speak() {
         currentAudio.onplay = () => {
             readingStatus.textContent =
                 mode === "normal"
-                    ? `ðŸ”Š Lecture en cours â€” ${selectedVoice}`
-                    : `ðŸ”Š Lecture ${modeLabel} â€” ${selectedVoice}`;
+                    ? `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â  Lecture en cours ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ${selectedVoice}`
+                    : `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â  Lecture ${modeLabel} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ${selectedVoice}`;
         };
 
         currentAudio.onended = () => {
@@ -475,7 +475,7 @@ async function speak() {
             readButton.disabled = false;
 
             readingStatus.textContent =
-                "âœ… Lecture terminÃ©e. L'audio est maintenant disponible au tÃ©lÃ©chargement.";
+                "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Lecture terminÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e. L'audio est maintenant disponible au tÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©chargement.";
         };
 
         currentAudio.onerror = () => {
@@ -484,7 +484,7 @@ async function speak() {
             readButton.disabled = false;
 
             readingStatus.textContent =
-                "âŒ Erreur pendant la lecture audio.";
+                "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erreur pendant la lecture audio.";
         };
 
         await currentAudio.play();
@@ -497,7 +497,7 @@ async function speak() {
         audioReadyForDownload = false;
 
         readingStatus.textContent =
-            `âŒ ${error.message}`;
+            `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${error.message}`;
     }
 }
 
@@ -505,7 +505,7 @@ async function speak() {
 function splitSubtitleSentences(text) {
     return text
         .replace(/\\r\\n/g, "\\n")
-        .split(/(?<=[.!?â€¦ã€‚ï¼ï¼Ÿ])\\s+/)
+        .split(/(?<=[.!?ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸])\\s+/)
         .map(value => value.trim())
         .filter(Boolean);
 }
@@ -517,10 +517,10 @@ function pauseReading() {
 
     if (!currentAudio.paused) {
         currentAudio.pause();
-        readingStatus.textContent = "â¸ Lecture en pause";
+        readingStatus.textContent = "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ Lecture en pause";
     } else {
         currentAudio.play();
-        readingStatus.textContent = "â–¶ï¸ Lecture reprise";
+        readingStatus.textContent = "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Lecture reprise";
     }
 }
 function stopReading() {
@@ -533,14 +533,14 @@ function stopReading() {
     downloadButton.disabled = true;
     readButton.disabled = false;
 
-    readingStatus.textContent = "â¹ Lecture arrÃªtÃ©e";
+    readingStatus.textContent = "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Lecture arrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªtÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e";
 }
 textInput.addEventListener("input", updateCounters);
 
 languageSelect.addEventListener("change", () => {
     loadVoices();
     readingStatus.textContent =
-        "Langue sÃ©lectionnÃ©e. Texte prÃªt Ã  Ãªtre lu.";
+        "Langue sÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©lectionnÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e. Texte prÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªt ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªtre lu.";
 });
 
 readingMode.addEventListener("change", () => {
@@ -550,7 +550,7 @@ readingMode.addEventListener("change", () => {
     readingStatus.textContent =
         readingMode.value === "normal"
             ? "Mode Normal : lecture standard."
-            : `Mode ${modeLabel} : analyse intelligente activÃ©e.`;
+            : `Mode ${modeLabel} : analyse intelligente activÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e.`;
 });
 
 speedSelect.addEventListener("change", () => {
@@ -558,7 +558,7 @@ speedSelect.addEventListener("change", () => {
 
     if (duration) {
         readingStatus.textContent =
-            `ðŸŽšï¸ DurÃ©e estimÃ©e : ${formatDuration(duration)}`;
+            `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â DurÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e estimÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e : ${formatDuration(duration)}`;
     }
 });
 
@@ -567,7 +567,7 @@ pauseButton.addEventListener("click", pauseReading);
 stopButton.addEventListener("click", stopReading);
 
 cleanButton.addEventListener("click", () => { cleanText(); addHistoryEntry("Nettoyage du texte"); });
-detectButton.addEventListener("click", () => { detectLanguage(); addHistoryEntry("Détection de la langue"); });
+detectButton.addEventListener("click", () => { detectLanguage(); addHistoryEntry("DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tection de la langue"); });
 clearButton.addEventListener("click", () => { clearText(); addHistoryEntry("Effacement du texte"); });
 
 
@@ -584,7 +584,7 @@ function updateDownloadButton() {
 downloadButton.addEventListener("click", () => {
     if (!audioReadyForDownload || !currentAudioUrl) {
         readingStatus.textContent =
-            "âš ï¸ Le tÃ©lÃ©chargement sera disponible aprÃ¨s la fin de la lecture.";
+            "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Le tÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©chargement sera disponible aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s la fin de la lecture.";
         return;
     }
 
@@ -599,7 +599,7 @@ downloadButton.addEventListener("click", () => {
     link.remove();
 
     readingStatus.textContent =
-        "âœ… TÃ©lÃ©chargement de l'audio lancÃ©.";
+        "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ TÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©chargement de l'audio lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©.";
 });
 
 updateDownloadButton();
@@ -666,12 +666,22 @@ function updateTranslationDownloadButtons() {
     }
 }
 
+if (downloadTranslationWordButton) {
+    downloadTranslationWordButton.addEventListener(
+        "click",
+        () => downloadTranslation("word")
+    );
+}
+
+
+
+
 async function translateText() {
     const text = getText().trim();
 
     if (!text) {
         readingStatus.textContent =
-            "âš ï¸ Aucun texte Ã  traduire.";
+            "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Aucun texte ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  traduire.";
         return;
     }
 
@@ -693,7 +703,7 @@ async function translateText() {
         updateTranslationDownloadButtons();
 
         readingStatus.textContent =
-            "â„¹ï¸ Le texte est dÃ©jÃ  dans cette langue.";
+            "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Le texte est dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©jÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  dans cette langue.";
 
         return;
     }
@@ -706,7 +716,7 @@ async function translateText() {
     updateTranslationDownloadButtons();
 
     readingStatus.textContent =
-        "ðŸŒ Traduction en cours...";
+        "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Traduction en cours...";
 
     try {
         const response = await fetch(
@@ -735,7 +745,7 @@ async function translateText() {
 
         if (!data.text) {
             throw new Error(
-                "La traduction reÃ§ue est vide."
+                "La traduction reÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ue est vide."
             );
         }
 
@@ -761,13 +771,13 @@ async function translateText() {
         updateTranslationDownloadButtons();
 
         const names = {
-            fr: "FranÃ§ais",
+            fr: "FranÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ais",
             en: "English",
             de: "Deutsch"
         };
 
         readingStatus.textContent =
-            `âœ… Texte traduit en ${names[target]}.`;
+            `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Texte traduit en ${names[target]}.`;
 
     } catch (error) {
         console.error(
@@ -779,7 +789,7 @@ async function translateText() {
         updateTranslationDownloadButtons();
 
         readingStatus.textContent =
-            `âŒ ${error.message}`;
+            `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${error.message}`;
 
     } finally {
         if (translateButton) {
@@ -790,7 +800,7 @@ async function translateText() {
 
 
 /* ================================
-   IMPORT PHOTO / CAMÃ‰RA / PDF
+   IMPORT PHOTO / CAMÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°RA / PDF
 ================================ */
 
 async function extractImportedFile(file) {
@@ -800,7 +810,7 @@ async function extractImportedFile(file) {
 
     if (file.size > 15 * 1024 * 1024) {
         readingStatus.textContent =
-            "âš ï¸ Le fichier est trop volumineux (15 Mo maximum).";
+            "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Le fichier est trop volumineux (15 Mo maximum).";
         return;
     }
 
@@ -814,8 +824,8 @@ async function extractImportedFile(file) {
 
     readingStatus.textContent =
         file.type === "application/pdf"
-            ? "ðŸ“„ Extraction du texte du PDF..."
-            : "ðŸ“· Analyse de l'image et extraction du texte...";
+            ? "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ Extraction du texte du PDF..."
+            : "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Analyse de l'image et extraction du texte...";
 
     try {
         const response = await fetch(
@@ -838,7 +848,7 @@ async function extractImportedFile(file) {
 
         if (!data.text) {
             throw new Error(
-                "Aucun texte n'a Ã©tÃ© trouvÃ©."
+                "Aucun texte n'a ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©tÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© trouvÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©."
             );
         }
 
@@ -852,8 +862,8 @@ async function extractImportedFile(file) {
 
         readingStatus.textContent =
             data.type === "pdf"
-                ? "âœ… Texte extrait du PDF."
-                : "âœ… Texte extrait de l'image.";
+                ? "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Texte extrait du PDF."
+                : "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Texte extrait de l'image.";
 
     } catch (error) {
         console.error(
@@ -862,7 +872,7 @@ async function extractImportedFile(file) {
         );
 
         readingStatus.textContent =
-            `âŒ ${error.message}`;
+            `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${error.message}`;
 
     } finally {
         if (photoInput) {
@@ -972,7 +982,7 @@ if (pdfInput) {
 
 
 /* ================================
-   TÃ‰LÃ‰CHARGEMENT PDF / IMAGE
+   TÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°LÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°CHARGEMENT PDF / IMAGE
 ================================ */
 
 async function downloadTranslation(format) {
@@ -981,7 +991,7 @@ async function downloadTranslation(format) {
 
     if (!translationReady || !text) {
         readingStatus.textContent =
-            "âš ï¸ Traduisez d'abord le texte.";
+            "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Traduisez d'abord le texte.";
         return;
     }
 
@@ -1004,8 +1014,8 @@ async function downloadTranslation(format) {
 
     readingStatus.textContent =
         format === "pdf"
-            ? "ðŸ“„ CrÃ©ation du PDF..."
-            : "ðŸ–¼ï¸ CrÃ©ation de l'image...";
+            ? "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ CrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ation du PDF..."
+            : "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â CrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ation de l'image...";
 
     if (format === "pdf" &&
         downloadTranslationPdfButton) {
@@ -1038,7 +1048,7 @@ async function downloadTranslation(format) {
 
         if (!response.ok) {
             let message =
-                "Impossible de crÃ©er le fichier.";
+                "Impossible de crÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©er le fichier.";
 
             try {
                 const data =
@@ -1049,7 +1059,7 @@ async function downloadTranslation(format) {
                         data.error;
                 }
             } catch {
-                // RÃ©ponse non JSON.
+                // RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ponse non JSON.
             }
 
             throw new Error(message);
@@ -1060,7 +1070,7 @@ async function downloadTranslation(format) {
 
         if (!blob.size) {
             throw new Error(
-                "Le fichier gÃ©nÃ©rÃ© est vide."
+                "Le fichier gÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©rÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© est vide."
             );
         }
 
@@ -1085,8 +1095,8 @@ async function downloadTranslation(format) {
 
         readingStatus.textContent =
             format === "pdf"
-                ? "âœ… PDF tÃ©lÃ©chargÃ©."
-                : "âœ… Image tÃ©lÃ©chargÃ©e.";
+                ? "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ PDF tÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©chargÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©."
+                : "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Image tÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©chargÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e.";
 
     } catch (error) {
         console.error(
@@ -1095,7 +1105,7 @@ async function downloadTranslation(format) {
         );
 
         readingStatus.textContent =
-            `âŒ ${error.message}`;
+            `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${error.message}`;
 
     } finally {
         updateTranslationDownloadButtons();
