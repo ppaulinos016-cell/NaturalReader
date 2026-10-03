@@ -1,4 +1,4 @@
-﻿const textInput = document.getElementById("text");
+const textInput = document.getElementById("text");
 const languageSelect = document.getElementById("language");
 const voiceSelect = document.getElementById("voice");
 const speedSelect = document.getElementById("speed");
@@ -776,8 +776,7 @@ async function translateText() {
             de: "Deutsch"
         };
 
-        readingStatus.textContent =
-            `ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Texte traduit en ${names[target]}.`;
+        readingStatus.textContent = `Texte traduit en ${names[target]}.`;
 
     } catch (error) {
         console.error(
