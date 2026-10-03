@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
@@ -529,13 +529,39 @@ app.post("/api/export-pdf", async (req, res) => {
             });
         }
 
+        const titles = {
+            fr: "NaturalReader — Traduction",
+            en: "NaturalReader — Translation",
+            de: "NaturalReader — Übersetzung",
+            ee: "NaturalReader — Traduction en Éwé"
+        };
+
+        const languageNames = {
+            fr: "Français",
+            en: "English",
+            de: "Deutsch",
+            ee: "Éwé"
+        };
+
+        const documentTitle = titles[language] || titles.fr;
+        const targetLanguage = languageNames[language] || language;
+
+        const paragraphs = text
+            .trim()
+            .split(/\r?\n/)
+            .map(p => p.trim())
+            .filter(Boolean);
+
         const doc = new PDFDocument({
             size: "A4",
-            margin: 50,
+            margin: 0,
             info: {
-                Title: "NaturalReader - Traduction",
-                Author: "NaturalReader"
-            }
+                Title: documentTitle,
+                Author: "NaturalReader",
+                Subject: "Document traduit avec NaturalReader",
+                Creator: "NaturalReader"
+            },
+            bufferPages: true
         });
 
         const chunks = [];
@@ -556,26 +582,154 @@ app.post("/api/export-pdf", async (req, res) => {
             res.send(buffer);
         });
 
-        const titles = {
-            fr: "NaturalReader — Traduction",
-            en: "NaturalReader — Translation",
-            de: "NaturalReader — Übersetzung"
-        };
+        const W = doc.page.width;
+        const H = doc.page.height;
 
-        doc.fontSize(20)
+        const M = 58;
+        const contentWidth = W - (M * 2);
+
+        const BLUE = "#2563eb";
+        const DARK_BLUE = "#1e40af";
+        const DARK = "#111827";
+        const GREY = "#64748b";
+        const LIGHT_BLUE = "#eff6ff";
+        const BORDER = "#dbeafe";
+
+        function header() {
+            doc.rect(0, 0, W, 88)
+                .fill(BLUE);
+
+            doc.fillColor("#ffffff")
+                .font("Helvetica-Bold")
+                .fontSize(23)
+                .text("NaturalReader", M, 25);
+
+            doc.fillColor("#dbeafe")
+                .font("Helvetica")
+                .fontSize(8.5)
+                .text("SMART READING & TRANSLATION", M, 57);
+
+            doc.roundedRect(W - M - 145, 27, 145, 30, 7)
+                .fill("#ffffff");
+
+            doc.fillColor(DARK_BLUE)
+                .font("Helvetica-Bold")
+                .fontSize(8)
+                .text("TRANSLATED DOCUMENT", W - M - 137, 38, {
+                    width: 129,
+                    align: "center"
+                });
+        }
+
+        function footer(pageNumber, totalPages) {
+            const y = H - 52;
+
+            doc.rect(0, y, W, 52)
+                .fill(DARK_BLUE);
+
+            doc.fillColor("#ffffff")
+                .font("Helvetica-Bold")
+                .fontSize(8.5)
+                .text("NaturalReader", M, y + 20);
+
+            doc.fillColor("#dbeafe")
+                .font("Helvetica")
+                .fontSize(8)
+                .text(
+                    `${targetLanguage}  •  Document traduit`,
+                    W / 2 - 100,
+                    y + 21,
+                    {
+                        width: 200,
+                        align: "center"
+                    }
+                );
+
+            doc.fillColor("#ffffff")
+                .font("Helvetica-Bold")
+                .fontSize(8)
+                .text(
+                    `Page ${pageNumber} / ${totalPages}`,
+                    W - M - 100,
+                    y + 20,
+                    {
+                        width: 100,
+                        align: "right"
+                    }
+                );
+        }
+
+        header();
+
+        doc.fillColor(DARK)
             .font("Helvetica-Bold")
-            .text(titles[language] || titles.fr, {
-                align: "center"
+            .fontSize(22)
+            .text(documentTitle, M, 120, {
+                width: contentWidth
             });
 
-        doc.moveDown();
-
-        doc.fontSize(11)
+        doc.fillColor(GREY)
             .font("Helvetica")
-            .text(text.trim(), {
-                align: "left",
-                lineGap: 5
-            });
+            .fontSize(9)
+            .text(
+                `Langue cible : ${targetLanguage}   •   ${new Date().toLocaleDateString("fr-FR")}`,
+                M,
+                151,
+                {
+                    width: contentWidth
+                }
+            );
+
+        doc.roundedRect(M, 180, contentWidth, 43, 8)
+            .fill(LIGHT_BLUE);
+
+        doc.fillColor(DARK_BLUE)
+            .font("Helvetica-Bold")
+            .fontSize(8.5)
+            .text("CONTENU DU DOCUMENT", M + 14, 196);
+
+        let y = 255;
+
+        for (let i = 0; i < paragraphs.length; i++) {
+            const paragraph = paragraphs[i];
+
+            const estimatedHeight =
+                Math.max(
+                    30,
+                    Math.ceil(paragraph.length / 85) * 18
+                );
+
+            if (y + estimatedHeight > H - 85) {
+                doc.addPage();
+                header();
+
+                doc.fillColor(GREY)
+                    .font("Helvetica")
+                    .fontSize(8)
+                    .text("SUITE DU DOCUMENT", M, 115);
+
+                y = 150;
+            }
+
+            doc.fillColor(DARK)
+                .font("Helvetica")
+                .fontSize(11.5)
+                .text(paragraph, M, y, {
+                    width: contentWidth,
+                    lineGap: 5,
+                    align: "left"
+                });
+
+            y = doc.y + 20;
+        }
+
+        const pages = doc.bufferedPageRange();
+
+        for (let i = 0; i < pages.count; i++) {
+            doc.switchToPage(i);
+
+            footer(i + 1, pages.count);
+        }
 
         doc.end();
 
@@ -590,7 +744,6 @@ app.post("/api/export-pdf", async (req, res) => {
         }
     }
 });
-
 
 app.post("/api/export-word", async (req, res) => {
     try {
