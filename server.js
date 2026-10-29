@@ -25,7 +25,7 @@ app.get("/api/voices", async (req, res) => {
 
         if (!apiKey) {
             return res.status(500).json({
-                error: "ClÃ© API ElevenLabs absente du serveur."
+                error: "Clé API ElevenLabs absente du serveur."
             });
         }
 
@@ -42,7 +42,7 @@ app.get("/api/voices", async (req, res) => {
             console.error("Erreur ElevenLabs :", errorText);
 
             return res.status(response.status).json({
-                error: "Impossible de rÃ©cupÃ©rer les voix ElevenLabs.",
+                error: "Impossible de récupérer les voix ElevenLabs.",
                 details: errorText
             });
         }
@@ -52,10 +52,10 @@ app.get("/api/voices", async (req, res) => {
         res.json(data);
 
     } catch (error) {
-        console.error("Erreur rÃ©cupÃ©ration des voix :", error);
+        console.error("Erreur récupération des voix :", error);
 
         res.status(500).json({
-            error: "Erreur interne lors de la rÃ©cupÃ©ration des voix."
+            error: "Erreur interne lors de la récupération des voix."
         });
     }
 });
@@ -72,7 +72,7 @@ app.post("/api/tts", async (req, res) => {
 
         if (!voiceId) {
             return res.status(400).json({
-                error: "Aucune voix n'a Ã©tÃ© sÃ©lectionnÃ©e."
+                error: "Aucune voix n'a été sélectionnée."
             });
         }
 
@@ -80,7 +80,7 @@ app.post("/api/tts", async (req, res) => {
 
         if (!apiKey) {
             return res.status(500).json({
-                error: "ClÃ© API ElevenLabs absente du serveur."
+                error: "Clé API ElevenLabs absente du serveur."
             });
         }
 
@@ -126,13 +126,13 @@ app.post("/api/tts", async (req, res) => {
         console.error("Erreur serveur TTS :", error);
 
         res.status(500).json({
-            error: "Erreur interne lors de la gÃ©nÃ©ration audio."
+            error: "Erreur interne lors de la génération audio."
         });
     }
 });
 
 /*
- * GÃ‰NÃ‰RATION AUDIO MICROSOFT
+ * GÉNÉRATION AUDIO MICROSOFT
  * Texte + voix Microsoft + vitesse -> MP3
  */
 
@@ -186,7 +186,7 @@ app.post("/api/tts-microsoft", async (req, res) => {
 
         if (!voiceName) {
             return res.status(400).json({
-                error: "Aucune voix Microsoft n'a Ã©tÃ© sÃ©lectionnÃ©e."
+                error: "Aucune voix Microsoft n'a été sélectionnée."
             });
         }
 
@@ -194,7 +194,7 @@ app.post("/api/tts-microsoft", async (req, res) => {
 
         if (!microsoftVoice) {
             return res.status(400).json({
-                error: "Cette voix Microsoft n'est pas autorisÃ©e."
+                error: "Cette voix Microsoft n'est pas autorisée."
             });
         }
 
@@ -228,11 +228,11 @@ app.post("/api/tts-microsoft", async (req, res) => {
         res.send(audioBuffer);
 
     } catch (error) {
-        console.error("Erreur gÃ©nÃ©ration Microsoft TTS :", error);
+        console.error("Erreur génération Microsoft TTS :", error);
 
         if (!res.headersSent) {
             res.status(500).json({
-                error: "Impossible de gÃ©nÃ©rer le fichier audio Microsoft.",
+                error: "Impossible de générer le fichier audio Microsoft.",
                 details: error.message
             });
         }
@@ -242,7 +242,7 @@ app.post("/api/tts-microsoft", async (req, res) => {
             try {
                 await fs.unlink(outputPath);
             } catch {
-                // Le fichier temporaire peut dÃ©jÃ  avoir Ã©tÃ© supprimÃ©.
+                // Le fichier temporaire peut déjà avoir été supprimÃ©.
             }
         }
     }
@@ -340,7 +340,7 @@ app.post("/api/generate-reel", async (req, res) => {
 
         if (!voiceName) {
             return res.status(400).json({
-                error: "Aucune voix Microsoft n'a Ã©tÃ© sÃ©lectionnÃ©e."
+                error: "Aucune voix Microsoft n'a été sélectionnée."
             });
         }
 
@@ -386,7 +386,7 @@ app.post("/api/generate-reel", async (req, res) => {
         if (!res.headersSent) {
             res.status(500).json({
                 error:
-                    "Impossible de gÃ©nÃ©rer le Reel.",
+                    "Impossible de générer le Reel.",
                 details:
                     error.message
             });
@@ -956,7 +956,7 @@ app.post("/api/export-image", async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`NaturalReader lancÃ© sur le port ${PORT}`);
+    console.log(`NaturalReader lancé sur le port ${PORT}`);
 });
 
 

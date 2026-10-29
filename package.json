@@ -23,7 +23,7 @@
     "googletrans": "^1.0.29",
     "microsoft-cognitiveservices-speech-sdk": "^1.51.0",
     "multer": "^2.3.0",
-    "node-edge-tts": "^1.2.10",
+    "node-edge-tts": "^1.2.11",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.20.2",
     "sharp": "^0.35.4",
